@@ -4,7 +4,7 @@ import EntryPage from './pages/EntryPage'
 import IdentityPage from './pages/IdentityPage'
 import TablePage from './pages/TablePage'
 import { RoomProvider } from './context/RoomContext'
-import { getStoredPlayerId } from './lib/deviceId'
+import { getDeviceId, getStoredPlayerId } from './lib/deviceId'
 import * as db from './lib/db'
 
 function RoomRoute() {
@@ -16,7 +16,8 @@ function RoomRoute() {
 
   useEffect(() => {
     async function check() {
-      const { data: roomData, error: roomErr } = await db.getRoom(code)
+      const deviceId = getDeviceId()
+      const { data: roomData, error: roomErr } = await db.getOrCreateRoom(code, deviceId)
       if (roomErr || !roomData) { navigate('/'); return }
 
       setRoom(roomData)

@@ -68,6 +68,7 @@ function useDragSwap({ players, myPlayer, getViewPos: gvp, onSwapRequest }) {
         e.preventDefault()
         const t = e.touches[0]
         const appEl = e.currentTarget.closest('.app-shell')
+        const avatarEl = e.currentTarget
 
         touchRef.current = {
           seat: viewPos, startX: t.clientX, startY: t.clientY, dragging: false,
@@ -76,7 +77,7 @@ function useDragSwap({ players, myPlayer, getViewPos: gvp, onSwapRequest }) {
             touchRef.current.dragging = true
             dragFromRef.current = viewPos
             spawnGhost(player.emoji, t.clientX, t.clientY, appEl)
-            e.currentTarget.style.opacity = '0.35'
+            avatarEl.style.opacity = '0.35'
           }, 300),
         }
       },

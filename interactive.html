@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>麻薯计分</title>
+  <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --matcha:     #7AAB8A;
+      --matcha-d:   #5A8A6A;
+      --matcha-l:   #B8D4C0;
+      --mochi:      #F5F0E8;
+      --pink:       #E8A0A8;
+      --brown:      #4A3728;
+      --gold:       #F0C84A;
+      --gold-d:     #E8A84A;
+      --green-plus: #6DB88A;
+      --red-minus:  #E87070;
+      --gray-dis:   #D4C4B0;
+      --text:       #4A3728;
+      --text-dim:   rgba(74,55,40,0.5);
+      --text-light: rgba(74,55,40,0.28);
+      --shadow:     rgba(74,55,40,0.12);
+    }
+
+    html, body {
+      height: 100%;
+      background: #C8BFB0;
+      font-family: 'ZCOOL KuaiLe', 'PingFang SC', cursive;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── App shell ── */
+    #app {
+      width: 375px;
+      height: 812px;
+      border-radius: 44px;
+      border: 10px solid #8A7D70;
+      box-shadow: 0 0 0 1.5px #7A6D60, 0 40px 80px rgba(74,55,40,0.3), inset 0 0 0 1px rgba(255,255,255,0.4);
+      overflow: hidden;
+      position: relative;
+      background: var(--mochi);
+    }
+    #app::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%; transform: translateX(-50%);
+      width: 110px; height: 28px;
+      background: #8A7D70;
+      border-radius: 0 0 18px 18px;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    /* ── Pages ── */
+    .page {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+    }
+    .page.active { display: flex; }
+
+    /* ═══════════════════════════════
+       PAGE: ENTRY
+    ═══════════════════════════════ */
+    #page-entry {
+      background: var(--mochi);
+      align-items: center;
+      justify-content: center;
+      padding: 70px 32px 52px;
+      overflow: hidden;
+    }
+    #page-entry::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 70% 55% at 50% 35%, rgba(184,212,192,0.55) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    .deco { position: absolute; border-radius: 50%; border: 1.5px dashed rgba(122,171,138,0.2); }
+    .d1 { width: 240px; height: 240px; top: -80px; right: -70px; }
+    .d2 { width: 160px; height: 160px; bottom: 120px; left: -55px; }
+
+    .ip-logo { width: 120px; height: 130px; margin: 0 auto 16px; }
+    .ip-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .brand-name { font-size: 34px; color: var(--matcha-d); letter-spacing: 0.22em; text-align: center; margin-bottom: 4px; text-shadow: 0 1px 0 rgba(255,255,255,0.8); }
+    .brand-sub { font-size: 12px; color: var(--text-dim); letter-spacing: 0.25em; text-align: center; margin-bottom: 52px; }
+
+    .room-label-txt { font-size: 12px; color: var(--text-dim); letter-spacing: 0.2em; text-align: center; margin-bottom: 12px; }
+    .room-input-box {
+      width: 100%; background: #FFFFFF;
+      border: 2px solid var(--brown); border-radius: 16px;
+      padding: 18px; font-size: 38px; color: var(--brown);
+      text-align: center; letter-spacing: 0.5em;
+      font-family: 'Fredoka', sans-serif; font-weight: 700;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 12px var(--shadow);
+      outline: none;
+    }
+    .room-input-box:focus { border-color: var(--matcha); }
+    /* remove number input spinners */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+    .entry-btn {
+      width: 100%; padding: 18px;
+      background: linear-gradient(160deg, var(--matcha) 0%, var(--matcha-d) 100%);
+      border: 2px solid var(--brown); border-radius: 16px;
+      color: #FFFFFF; font-size: 18px; font-family: 'ZCOOL KuaiLe', cursive;
+      letter-spacing: 0.22em;
+      box-shadow: 0 4px 12px var(--shadow), 0 2px 0 var(--brown);
+      cursor: pointer; border: none; position: relative;
+      border: 2px solid var(--brown);
+    }
+    .entry-btn:active { transform: translateY(1px); }
+    .entry-note { margin-top: 16px; font-size: 12px; color: var(--text-light); text-align: center; }
+
+    /* ═══════════════════════════════
+       PAGE: IDENTITY
+    ═══════════════════════════════ */
+    #page-identity {
+      background: var(--mochi);
+      padding: 72px 28px 48px;
+      overflow: hidden;
+    }
+    #page-identity::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 55% 32% at 50% 8%, rgba(184,212,192,0.45) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    .id-back { font-size: 14px; color: var(--text-dim); margin-bottom: 24px; position: relative; cursor: pointer; }
+    .id-header { margin-bottom: 40px; position: relative; }
+    .id-header h2 { font-size: 28px; color: var(--brown); letter-spacing: 0.1em; margin-bottom: 6px; }
+    .id-header p { font-size: 13px; color: var(--matcha); letter-spacing: 0.12em; }
+
+    .avatar-area { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 36px; position: relative; }
+    .avatar-ring {
+      width: 96px; height: 96px; border-radius: 50%;
+      background: var(--matcha-l);
+      border: 2px solid var(--brown);
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      box-shadow: 0 4px 12px var(--shadow);
+      cursor: pointer;
+      font-size: 46px;
+    }
+    .avatar-cam {
+      position: absolute; bottom: 0; right: 0;
+      width: 28px; height: 28px; background: var(--gold);
+      border: 1.5px solid var(--brown);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; pointer-events: none;
+    }
+    .avatar-hint { font-size: 12px; color: var(--text-dim); }
+
+    /* emoji picker grid */
+    .emoji-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
+      background: #FFFFFF; border: 1.5px solid var(--brown);
+      border-radius: 16px; padding: 12px; margin-bottom: 16px;
+      box-shadow: 0 4px 12px var(--shadow);
+    }
+    .emoji-opt {
+      width: 46px; height: 46px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; cursor: pointer; border: 2px solid transparent;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .emoji-opt:hover { background: var(--matcha-l); }
+    .emoji-opt.selected { border-color: var(--matcha-d); background: rgba(122,171,138,0.2); }
+
+    .field-label { font-size: 12px; color: var(--text-dim); letter-spacing: 0.14em; display: block; margin-bottom: 10px; position: relative; }
+    .text-input {
+      width: 100%; background: #FFFFFF;
+      border: 1.5px solid var(--brown); border-radius: 14px;
+      padding: 16px 20px; font-size: 16px; color: var(--text);
+      font-family: 'ZCOOL KuaiLe', cursive;
+      margin-bottom: 32px;
+      box-shadow: 0 2px 8px var(--shadow);
+      outline: none;
+      position: relative;
+    }
+    .text-input:focus { border-color: var(--matcha); }
+    .text-input::placeholder { color: var(--text-light); }
+
+    .green-btn {
+      width: 100%; padding: 18px;
+      background: linear-gradient(160deg, var(--matcha) 0%, var(--matcha-d) 100%);
+      border: 2px solid var(--brown); border-radius: 16px;
+      color: #FFFFFF; font-size: 18px; font-family: 'ZCOOL KuaiLe', cursive;
+      letter-spacing: 0.18em;
+      box-shadow: 0 4px 12px var(--shadow), 0 2px 0 var(--brown);
+      cursor: pointer;
+    }
+    .green-btn:active { transform: translateY(1px); }
+    .green-btn:disabled { background: var(--gray-dis); border-color: var(--gray-dis); box-shadow: none; cursor: default; }
+
+    /* ═══════════════════════════════
+       PAGE: MAIN TABLE
+    ═══════════════════════════════ */
+    #page-main {
+      background: #E8F0EB;
+      overflow: hidden;
+    }
+    .tbl-header {
+      height: 56px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 20px 0;
+      background: rgba(245,240,232,0.95);
+      border-bottom: 1.5px solid rgba(74,55,40,0.1);
+      backdrop-filter: blur(6px);
+      position: relative; z-index: 10;
+    }
+    .room-info { display: flex; align-items: baseline; gap: 6px; }
+    .room-word { font-size: 12px; color: var(--text-dim); letter-spacing: 0.1em; }
+    .room-num { font-size: 22px; font-weight: 700; color: var(--matcha-d); font-family: 'Fredoka', sans-serif; letter-spacing: 0.18em; }
+
+    .tbl-area {
+      flex: 1; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .tbl-area::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 75% at 50% 50%, rgba(122,171,138,0.35) 0%, #D8EAD8 100%);
+      pointer-events: none;
+    }
+
+    .felt-oval {
+      position: absolute;
+      width: 292px; height: 452px;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: radial-gradient(ellipse 80% 70% at 38% 35%, #8ABE96 0%, #6EA07A 55%, #5A8A6A 100%);
+      border: 2.5px solid var(--brown);
+      box-shadow: 0 0 0 4px rgba(122,171,138,0.25), 0 16px 48px rgba(74,55,40,0.2), inset 0 0 60px rgba(74,55,40,0.1);
+    }
+    .felt-oval::after {
+      content: ''; position: absolute; inset: 14px;
+      border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .pp { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 5; }
+    .pp-top    { top: 14px;   left: 50%; transform: translateX(-50%); }
+    .pp-left   { left: 8px;   top: 50%;  transform: translateY(-50%); }
+    .pp-right  { right: 8px;  top: 50%;  transform: translateY(-50%); }
+    .pp-bottom { bottom: 2px; left: 50%; transform: translateX(-50%); }
+
+    .av {
+      width: 56px; height: 56px; border-radius: 50%;
+      border: 2px solid var(--brown);
+      background: var(--mochi);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 4px 10px rgba(74,55,40,0.2);
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.15s;
+    }
+    .av:active { transform: scale(0.93); }
+    .av-self {
+      width: 64px; height: 64px; font-size: 28px;
+      border: 2.5px solid var(--gold);
+      box-shadow: 0 0 0 3px rgba(240,200,74,0.3), 0 4px 12px rgba(74,55,40,0.2);
+      cursor: default;
+    }
+    .av-self:active { transform: none; }
+    .crown { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 16px; }
+    .name-tag {
+      background: #FFFFFF; border: 1.5px solid var(--brown);
+      border-radius: 20px; padding: 3px 10px;
+      font-size: 11px; color: var(--brown);
+      white-space: nowrap;
+      box-shadow: 0 2px 6px var(--shadow);
+    }
+    .score-self {
+      font-size: 24px; font-weight: 700;
+      color: var(--brown);
+      font-family: 'Fredoka', sans-serif;
+    }
+
+    /* pool */
+    .pool-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -52%);
+      z-index: 6;
+      display: flex; flex-direction: column; align-items: center;
+      cursor: pointer;
+    }
+    .pool-ip-img {
+      width: 148px; height: 88px;
+      object-fit: contain; object-position: bottom center;
+      display: block; position: relative; z-index: 2;
+      margin-bottom: -12px;
+      filter: drop-shadow(0 4px 6px rgba(74,55,40,0.2));
+    }
+    .pool-score-box {
+      background: linear-gradient(160deg, var(--gold) 0%, var(--gold-d) 100%);
+      border: 2px solid var(--brown); border-radius: 20px;
+      padding: 7px 20px;
+      display: flex; align-items: baseline; gap: 4px;
+      box-shadow: 0 4px 12px rgba(74,55,40,0.2), 0 2px 0 rgba(74,55,40,0.3);
+      position: relative; z-index: 1;
+    }
+    .pool-lbl { font-size: 13px; color: var(--brown); letter-spacing: 0.06em; }
+    .pool-num { font-size: 24px; font-weight: 700; color: var(--brown); font-family: 'Fredoka', sans-serif; }
+    .pool-unit { font-size: 13px; color: var(--brown); }
+
+    /* bottom nav */
+    .btm-nav {
+      height: 68px; flex-shrink: 0;
+      background: rgba(245,240,232,0.95);
+      border-top: 1.5px solid rgba(74,55,40,0.1);
+      display: flex; align-items: center; justify-content: space-around;
+      padding: 0 60px 10px;
+    }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+    .nav-ico { font-size: 22px; }
+    .nav-txt { font-size: 12px; color: var(--text-dim); }
+
+    /* drag ghost */
+    .drag-ghost {
+      position: fixed;
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--matcha-l);
+      border: 2px solid var(--matcha-d);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 8px 24px rgba(74,55,40,0.3);
+      pointer-events: none;
+      z-index: 9998;
+      opacity: 0.85;
+      transform: translate(-50%, -50%) scale(1.1);
+      transition: opacity 0.1s;
+    }
+    .pp.drag-over .av { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(240,200,74,0.4); }
+
+    /* ═══════════════════════════════
+       BOTTOM SHEETS
+    ═══════════════════════════════ */
+    .sheet-overlay {
+      position: absolute; inset: 0; z-index: 100;
+      display: none;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    .sheet-overlay.open { display: flex; }
+
+    .sheet-dim {
+      position: absolute; inset: 0;
+      background: rgba(74,55,40,0.35);
+      backdrop-filter: blur(3px);
+    }
+
+    .sheet-panel {
+      position: relative; z-index: 1;
+      background: var(--mochi);
+      border-top-left-radius: 24px; border-top-right-radius: 24px;
+      border-top: 2px solid var(--brown);
+      padding: 0 24px 44px;
+      box-shadow: 0 -8px 32px rgba(74,55,40,0.15);
+      transform: translateY(100%);
+      transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    .sheet-overlay.open .sheet-panel { transform: translateY(0); }
+
+    .sheet-knob { width: 36px; height: 4px; background: var(--gray-dis); border-radius: 2px; margin: 14px auto 20px; }
+    .sheet-ttl { font-size: 20px; color: var(--brown); letter-spacing: 0.14em; text-align: center; margin-bottom: 22px; }
+
+    /* Transfer */
+    .recipient-row {
+      display: flex; align-items: center; gap: 14px;
+      background: #FFFFFF; border: 1.5px solid var(--brown);
+      border-radius: 14px; padding: 14px 16px; margin-bottom: 20px;
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+    .rec-av {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: var(--matcha-l); border: 2px solid var(--brown);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-family: 'ZCOOL KuaiLe', cursive;
+    }
+    .rec-info { flex: 1; }
+    .rec-lbl { font-size: 10px; color: var(--text-dim); letter-spacing: 0.12em; margin-bottom: 3px; }
+    .rec-name { font-size: 16px; color: var(--brown); }
+    .lock-badge {
+      font-size: 11px; color: var(--matcha-d);
+      border: 1px solid var(--matcha); border-radius: 8px;
+      padding: 3px 9px; background: rgba(122,171,138,0.12);
+    }
+
+    .direction-row {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+    }
+    .dir-btn {
+      flex: 1; padding: 10px 0; border-radius: 12px;
+      font-size: 14px; font-family: 'ZCOOL KuaiLe', cursive;
+      letter-spacing: 0.1em; cursor: pointer; border: 2px solid var(--brown);
+      color: var(--brown); background: #FFFFFF;
+    }
+    .dir-btn.active-send { background: var(--pink); color: var(--brown); }
+    .dir-btn.active-recv { background: var(--matcha-l); color: var(--brown); }
+
+    .amt-lbl { font-size: 12px; color: var(--text-dim); letter-spacing: 0.12em; display: block; margin-bottom: 10px; }
+    .amt-box {
+      width: 100%; background: #FFFFFF;
+      border: 2px solid var(--brown); border-radius: 14px;
+      padding: 14px; font-size: 44px; color: var(--brown);
+      text-align: center;
+      font-family: 'Fredoka', sans-serif; font-weight: 700;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px var(--shadow);
+      outline: none;
+    }
+    .pink-btn {
+      width: 100%; padding: 18px;
+      background: linear-gradient(160deg, #F0B0B8 0%, var(--pink) 100%);
+      border: 2px solid var(--brown); border-radius: 16px;
+      color: var(--brown); font-size: 18px; font-family: 'ZCOOL KuaiLe', cursive;
+      letter-spacing: 0.18em;
+      box-shadow: 0 4px 12px var(--shadow), 0 2px 0 var(--brown);
+      cursor: pointer;
+    }
+
+    /* Pool sheet */
+    .pool-summary {
+      text-align: center;
+      background: linear-gradient(160deg, var(--gold) 0%, var(--gold-d) 100%);
+      border: 2px solid var(--brown); border-radius: 16px;
+      padding: 18px; margin-bottom: 22px;
+      box-shadow: 0 4px 12px var(--shadow);
+    }
+    .pool-sum-lbl { font-size: 12px; color: var(--brown); opacity: 0.7; letter-spacing: 0.12em; margin-bottom: 4px; }
+    .pool-sum-num { font-size: 52px; font-weight: 700; color: var(--brown); font-family: 'Fredoka', sans-serif; line-height: 1; }
+    .pool-sum-unit { font-size: 14px; color: var(--brown); opacity: 0.7; margin-top: 2px; }
+    .pool-btn-row { display: flex; flex-direction: column; gap: 12px; }
+    .pool-btn {
+      width: 100%; padding: 18px; border-radius: 16px;
+      font-size: 18px; font-family: 'ZCOOL KuaiLe', cursive; letter-spacing: 0.1em;
+      border: 2px solid var(--brown); cursor: pointer;
+      box-shadow: 0 2px 0 var(--brown);
+    }
+    .pool-btn-in { background: var(--matcha-l); color: var(--brown); }
+    .pool-btn-collect { background: linear-gradient(160deg, var(--gold) 0%, var(--gold-d) 100%); color: var(--brown); }
+    .pool-btn-disabled { background: var(--gray-dis); color: rgba(74,55,40,0.35); border-color: var(--gray-dis); box-shadow: none; cursor: not-allowed; }
+
+    /* History sheet */
+    .hist-list { display: flex; flex-direction: column; max-height: 380px; overflow-y: auto; }
+    .hist-item {
+      display: flex; align-items: center;
+      padding: 14px 0; border-bottom: 1px solid rgba(74,55,40,0.08); gap: 8px;
+    }
+    .hist-item:last-child { border-bottom: none; }
+    .hist-desc { flex: 1; font-size: 14px; color: var(--brown); }
+    .hist-amt { font-size: 16px; font-family: 'Fredoka', sans-serif; font-weight: 700; min-width: 38px; text-align: right; }
+    .ha-neg  { color: var(--red-minus); }
+    .ha-pos  { color: var(--green-plus); }
+    .ha-pool { color: #C8940A; }
+    .ha-gray { color: var(--gray-dis); }
+    .revoke-btn {
+      background: #FFFFFF; border: 1.5px solid rgba(74,55,40,0.2);
+      border-radius: 8px; padding: 4px 10px;
+      color: rgba(74,55,40,0.45); font-size: 12px;
+      font-family: 'ZCOOL KuaiLe', cursive;
+      cursor: pointer; white-space: nowrap; margin-left: 8px;
+    }
+    .hist-empty { text-align: center; color: var(--text-light); font-size: 14px; padding: 40px 0; }
+
+    /* Settings sheet */
+    .setting-lbl { font-size: 12px; color: var(--text-dim); letter-spacing: 0.12em; display: block; margin-bottom: 10px; }
+    .setting-input {
+      width: 100%; background: #FFFFFF;
+      border: 2px solid var(--brown); border-radius: 14px;
+      padding: 14px 20px; font-size: 24px; color: var(--brown);
+      font-family: 'Fredoka', sans-serif; font-weight: 700;
+      margin-bottom: 6px; box-shadow: 0 2px 8px var(--shadow);
+      outline: none;
+      text-align: center;
+    }
+    .setting-hint { font-size: 11px; color: var(--text-dim); margin-bottom: 22px; }
+    .divider { height: 1px; background: rgba(74,55,40,0.08); margin: 20px 0; }
+    .danger-btn {
+      width: 100%; padding: 18px;
+      background: rgba(232,112,112,0.1);
+      border: 2px solid var(--red-minus); border-radius: 16px;
+      color: var(--red-minus); font-size: 17px;
+      font-family: 'ZCOOL KuaiLe', cursive; letter-spacing: 0.1em;
+      cursor: pointer;
+    }
+    .danger-btn:active { background: rgba(232,112,112,0.2); }
+
+    /* ── Settings: player list for kick ── */
+    .kick-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 6px; }
+    .kick-item {
+      display: flex; align-items: center; gap: 12px;
+      background: #FFFFFF; border: 1.5px solid var(--brown);
+      border-radius: 12px; padding: 10px 14px;
+      box-shadow: 0 2px 6px var(--shadow);
+    }
+    .kick-av { width: 36px; height: 36px; border-radius: 50%; background: var(--matcha-l); border: 1.5px solid var(--brown); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .kick-name { flex: 1; font-size: 15px; color: var(--brown); }
+    .kick-btn {
+      padding: 6px 14px; border-radius: 10px; font-size: 12px;
+      font-family: 'ZCOOL KuaiLe', cursive; cursor: pointer;
+      border: 1.5px solid var(--red-minus); color: var(--red-minus);
+      background: rgba(232,112,112,0.08);
+    }
+    .kick-btn:active { background: rgba(232,112,112,0.2); }
+
+    /* ── Swap confirm overlay ── */
+    #swap-confirm {
+      position: absolute; inset: 0; z-index: 200;
+      background: rgba(74,55,40,0.4);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    #swap-confirm.open { display: flex; }
+    .swap-card {
+      background: var(--mochi);
+      border: 2px solid var(--brown);
+      border-radius: 24px;
+      padding: 28px 24px;
+      width: 100%;
+      box-shadow: 0 16px 48px rgba(74,55,40,0.25);
+      text-align: center;
+    }
+    .swap-card h3 { font-size: 20px; color: var(--brown); margin-bottom: 10px; letter-spacing: 0.1em; }
+    .swap-card p { font-size: 14px; color: var(--text-dim); margin-bottom: 24px; letter-spacing: 0.06em; }
+    .swap-avatars { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 24px; }
+    .swap-av { width: 56px; height: 56px; border-radius: 50%; background: var(--matcha-l); border: 2px solid var(--brown); display: flex; align-items: center; justify-content: center; font-size: 26px; }
+    .swap-arrow { font-size: 20px; color: var(--text-dim); }
+    .swap-btns { display: flex; gap: 12px; }
+    .swap-cancel { flex: 1; padding: 14px; background: #FFFFFF; border: 1.5px solid var(--brown); border-radius: 14px; font-size: 16px; font-family: 'ZCOOL KuaiLe', cursive; color: var(--text-dim); cursor: pointer; }
+    .swap-ok { flex: 1; padding: 14px; background: linear-gradient(160deg, var(--matcha) 0%, var(--matcha-d) 100%); border: 2px solid var(--brown); border-radius: 14px; font-size: 16px; font-family: 'ZCOOL KuaiLe', cursive; color: #FFFFFF; cursor: pointer; }
+
+    /* ── Generic confirm dialog ── */
+    #confirm-dialog {
+      position: absolute; inset: 0; z-index: 300;
+      background: rgba(74,55,40,0.4);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    #confirm-dialog.open { display: flex; }
+    .confirm-card {
+      background: var(--mochi);
+      border: 2px solid var(--brown);
+      border-radius: 24px;
+      padding: 28px 24px;
+      width: 100%;
+      box-shadow: 0 16px 48px rgba(74,55,40,0.25);
+      text-align: center;
+    }
+    .confirm-card h3 { font-size: 18px; color: var(--brown); margin-bottom: 10px; }
+    .confirm-card p { font-size: 13px; color: var(--text-dim); margin-bottom: 24px; line-height: 1.6; }
+    .confirm-btns { display: flex; gap: 12px; }
+    .confirm-cancel { flex: 1; padding: 14px; background: #FFFFFF; border: 1.5px solid var(--brown); border-radius: 14px; font-size: 15px; font-family: 'ZCOOL KuaiLe', cursive; color: var(--text-dim); cursor: pointer; }
+    .confirm-ok { flex: 1; padding: 14px; background: rgba(232,112,112,0.15); border: 2px solid var(--red-minus); border-radius: 14px; font-size: 15px; font-family: 'ZCOOL KuaiLe', cursive; color: var(--red-minus); cursor: pointer; }
+
+    /* ── Input error ── */
+    .input-error { font-size: 11px; color: var(--red-minus); margin-top: -26px; margin-bottom: 18px; letter-spacing: 0.06em; display: none; }
+    .input-error.show { display: block; }
+    .text-input.error { border-color: var(--red-minus); }
+
+    /* ── Toast ── */
+    #toast {
+      position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: rgba(74,55,40,0.85);
+      color: #FFFFFF; font-size: 13px; letter-spacing: 0.1em;
+      padding: 10px 20px; border-radius: 20px;
+      opacity: 0; transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none; z-index: 9999;
+      white-space: nowrap;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ① ENTRY PAGE -->
+  <div id="page-entry" class="page active">
+    <div class="deco d1"></div>
+    <div class="deco d2"></div>
+    <div style="position:relative;text-align:center;">
+      <div class="ip-logo"><img src="./ip-standing.jpg" alt="麻薯"></div>
+      <div class="brand-name">麻薯计分</div>
+      <div class="brand-sub">贵 州 捉 鸡 麻 将</div>
+    </div>
+    <div style="width:100%;margin-top:8px;position:relative;">
+      <div class="room-label-txt">输 入 房 间 号</div>
+      <input id="room-code-input" class="room-input-box" type="text" inputmode="numeric" maxlength="4" placeholder="8888" pattern="\d{4}">
+      <button class="entry-btn" onclick="enterRoom()">进 入 房 间</button>
+      <div class="entry-note">房间不存在将自动创建</div>
+    </div>
+  </div>
+
+  <!-- ② IDENTITY PAGE -->
+  <div id="page-identity" class="page">
+    <div style="position:relative;">
+      <div class="id-back" onclick="goBack()">‹ 返回</div>
+      <div class="id-header">
+        <h2>设 置 身 份</h2>
+        <p id="id-room-label">房间 8888</p>
+      </div>
+      <div class="avatar-area">
+        <div class="avatar-ring" id="avatar-display">
+          <span id="avatar-emoji">🍡</span>
+        </div>
+        <div class="avatar-hint">选 择 你 的 头 像</div>
+      </div>
+      <div id="emoji-picker" class="emoji-grid"></div>
+      <span class="field-label">你 的 名 字</span>
+      <input class="text-input" id="name-input" type="text" placeholder="请输入姓名（最多6字）" maxlength="6" oninput="checkNameInput()">
+      <div class="input-error" id="name-error">仅支持汉字、字母、数字，不能含特殊字符</div>
+      <button class="green-btn" id="identity-btn" onclick="enterIdentity()" disabled>进 入 房 间</button>
+    </div>
+  </div>
+
+  <!-- ③ MAIN TABLE PAGE -->
+  <div id="page-main" class="page">
+    <div class="tbl-header">
+      <div class="room-info">
+        <span class="room-word">房间</span>
+        <span class="room-num" id="main-room-num">8888</span>
+      </div>
+      <div style="font-size:12px;color:var(--text-dim);letter-spacing:0.08em;" id="online-count">4人在线</div>
+    </div>
+    <div class="tbl-area" id="tbl-area">
+      <div class="felt-oval"></div>
+
+      <!-- Top player -->
+      <div class="pp pp-top" id="pp-top" data-seat="top">
+        <div class="av" id="av-top" onclick="handlePlayerTap('top')"></div>
+        <div class="name-tag" id="name-top"></div>
+      </div>
+
+      <!-- Left player -->
+      <div class="pp pp-left" id="pp-left" data-seat="left">
+        <div class="av" id="av-left" onclick="handlePlayerTap('left')"></div>
+        <div class="name-tag" id="name-left"></div>
+      </div>
+
+      <!-- Right player -->
+      <div class="pp pp-right" id="pp-right" data-seat="right">
+        <div class="av" id="av-right" onclick="handlePlayerTap('right')"></div>
+        <div class="name-tag" id="name-right"></div>
+      </div>
+
+      <!-- Pool -->
+      <div class="pool-center" id="pool-center" onclick="openSheet('pool')">
+        <img class="pool-ip-img" src="./ip-reclining.jpg" alt="公池">
+        <div class="pool-score-box">
+          <span class="pool-lbl">公池</span>
+          <span class="pool-num" id="pool-num">0</span>
+          <span class="pool-unit">分</span>
+        </div>
+      </div>
+
+      <!-- Self (bottom) -->
+      <div class="pp pp-bottom" id="pp-bottom">
+        <div class="av av-self" id="av-self">
+          <div class="crown">👑</div>
+          <span id="av-self-emoji"></span>
+        </div>
+        <div class="name-tag" id="name-self"></div>
+        <div class="score-self" id="score-self">0</div>
+      </div>
+    </div>
+    <div class="btm-nav">
+      <div class="nav-item" onclick="openSheet('history')">
+        <div class="nav-ico">📋</div><div class="nav-txt">记录</div>
+      </div>
+      <div class="nav-item" id="nav-settings" onclick="openSettingsSheet()" style="display:none;">
+        <div class="nav-ico">⚙️</div><div class="nav-txt">设置</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SHEET: TRANSFER ── -->
+  <div id="sheet-transfer" class="sheet-overlay">
+    <div class="sheet-dim" onclick="closeSheet('transfer')"></div>
+    <div class="sheet-panel">
+      <div class="sheet-knob"></div>
+      <div class="sheet-ttl">转 账</div>
+      <div class="recipient-row">
+        <div class="rec-av" id="transfer-rec-av"></div>
+        <div class="rec-info">
+          <div class="rec-lbl">付给对方</div>
+          <div class="rec-name" id="transfer-rec-name"></div>
+        </div>
+      </div>
+      <span class="amt-lbl" id="transfer-dir-hint">你将付出多少分？</span>
+      <input class="amt-box" id="transfer-amount" type="number" inputmode="numeric" placeholder="0" min="1" oninput="updateTransferHint()">
+      <button class="pink-btn" onclick="confirmTransfer()">确 认 转 账</button>
+    </div>
+  </div>
+
+  <!-- ── SHEET: POOL ── -->
+  <div id="sheet-pool" class="sheet-overlay">
+    <div class="sheet-dim" onclick="closeSheet('pool')"></div>
+    <div class="sheet-panel">
+      <div class="sheet-knob"></div>
+      <div class="sheet-ttl">公 池</div>
+      <div class="pool-summary">
+        <div class="pool-sum-lbl">当前公池</div>
+        <div class="pool-sum-num" id="pool-sheet-num">0</div>
+        <div class="pool-sum-unit">分</div>
+      </div>
+      <div class="pool-btn-row">
+        <button class="pool-btn pool-btn-in" onclick="poolAction('pay')">交公池（-1分）</button>
+        <button class="pool-btn pool-btn-collect" id="pool-collect-btn" onclick="poolAction('collect')">收公池（+<span id="pool-collect-amt">0</span>分）</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SHEET: HISTORY ── -->
+  <div id="sheet-history" class="sheet-overlay">
+    <div class="sheet-dim" onclick="closeSheet('history')"></div>
+    <div class="sheet-panel">
+      <div class="sheet-knob"></div>
+      <div class="sheet-ttl">交易记录</div>
+      <div class="hist-list" id="hist-list"></div>
+    </div>
+  </div>
+
+  <!-- ── SHEET: SETTINGS ── -->
+  <div id="sheet-settings" class="sheet-overlay">
+    <div class="sheet-dim" onclick="closeSheet('settings')"></div>
+    <div class="sheet-panel">
+      <div class="sheet-knob"></div>
+      <div class="sheet-ttl">房间设置</div>
+      <span class="setting-lbl">初 始 分 数</span>
+      <input class="setting-input" id="setting-init-score" type="number" inputmode="numeric" value="200" onchange="updateInitScore()">
+      <div class="setting-hint">仅影响重置后的分数</div>
+      <div class="divider"></div>
+      <span class="setting-lbl">踢 出 玩 家</span>
+      <div class="kick-list" id="kick-list"></div>
+      <div class="divider"></div>
+      <button class="danger-btn" onclick="confirmReset()" style="margin-bottom:10px;">重 置 房 间</button>
+      <button class="danger-btn" onclick="confirmDissolve()">解 散 房 间</button>
+    </div>
+  </div>
+
+  <!-- ── SWAP CONFIRM ── -->
+  <div id="swap-confirm">
+    <div class="swap-card">
+      <h3>换 座 确 认</h3>
+      <p id="swap-desc">确认与对方交换座位吗？</p>
+      <div class="swap-avatars">
+        <div class="swap-av" id="swap-av-self"></div>
+        <div class="swap-arrow">⇄</div>
+        <div class="swap-av" id="swap-av-other"></div>
+      </div>
+      <div class="swap-btns">
+        <button class="swap-cancel" onclick="cancelSwap()">取消</button>
+        <button class="swap-ok" onclick="confirmSwap()">确认换座</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GENERIC CONFIRM ── -->
+  <div id="confirm-dialog">
+    <div class="confirm-card">
+      <h3 id="confirm-title">确认操作</h3>
+      <p id="confirm-msg">确定要执行这个操作吗？</p>
+      <div class="confirm-btns">
+        <button class="confirm-cancel" onclick="closeConfirm()">取消</button>
+        <button class="confirm-ok" id="confirm-ok-btn" onclick="executeConfirm()">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOAST ── -->
+  <div id="toast"></div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+const EMOJIS = ['🍡', '🐼', '🐨', '🦊', '🐸', '🐯', '🐻', '🐙', '🦄', '🐝', '🦋', '🍀', '🌸', '⭐', '🎃'];
+
+const state = {
+  roomCode: '',
+  initScore: 200,
+  gameStarted: false, // once first transaction happens
+  pool: 0,
+  // seats: top / left / right / bottom(self)
+  seats: {
+    top:   null,
+    left:  null,
+    right: null,
+  },
+  self: {
+    name: '',
+    emoji: '🍡',
+    score: 0,
+  },
+  isHost: true,
+  history: [], // [{id, desc, type, selfDelta, poolDelta}]
+  transferDirection: 'send', // 'send' | 'recv'
+  transferTarget: null, // seat key
+  pendingConfirm: null,
+  pendingSwap: null, // {seat, fromSelf: true}
+};
+
+// Mock other players
+const MOCK_PLAYERS = [
+  { name: '阿福', emoji: '🐼' },
+  { name: '老虎', emoji: '🐯' },
+  { name: '小熊', emoji: '🐻' },
+];
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function enterRoom() {
+  const input = document.getElementById('room-code-input');
+  let code = input.value.replace(/\D/g, '').slice(0, 4);
+  if (code.length !== 4) { showToast('请输入4位数字房间号'); input.focus(); return; }
+  state.roomCode = code;
+  document.getElementById('id-room-label').textContent = '房间 ' + code;
+  buildEmojiPicker();
+  showPage('page-identity');
+}
+
+function goBack() {
+  showPage('page-entry');
+}
+
+function enterIdentity() {
+  const nameInput = document.getElementById('name-input');
+  const name = nameInput.value.trim();
+  if (!name) return;
+
+  state.self.name = name;
+  state.self.score = state.initScore;
+
+  // populate mock seats
+  const seats = ['top', 'left', 'right'];
+  seats.forEach((seat, i) => {
+    state.seats[seat] = { ...MOCK_PLAYERS[i], score: state.initScore };
+  });
+
+  setupMainPage();
+  showPage('page-main');
+}
+
+// ═══════════════════════════════════════════════
+// IDENTITY PAGE HELPERS
+// ═══════════════════════════════════════════════
+function buildEmojiPicker() {
+  const picker = document.getElementById('emoji-picker');
+  picker.innerHTML = '';
+  EMOJIS.forEach(e => {
+    const el = document.createElement('div');
+    el.className = 'emoji-opt' + (e === state.self.emoji ? ' selected' : '');
+    el.textContent = e;
+    el.onclick = () => selectEmoji(e);
+    picker.appendChild(el);
+  });
+}
+
+function selectEmoji(e) {
+  state.self.emoji = e;
+  document.getElementById('avatar-emoji').textContent = e;
+  document.querySelectorAll('.emoji-opt').forEach(el => {
+    el.classList.toggle('selected', el.textContent === e);
+  });
+}
+
+const NAME_RE = /^[\u4e00-\u9fa5a-zA-Z0-9]+$/;
+
+function checkNameInput() {
+  const raw = document.getElementById('name-input').value;
+  const val = raw.trim();
+  const errEl = document.getElementById('name-error');
+  const inputEl = document.getElementById('name-input');
+  const btn = document.getElementById('identity-btn');
+
+  if (!val) {
+    errEl.classList.remove('show');
+    inputEl.classList.remove('error');
+    btn.disabled = true;
+    return;
+  }
+  if (!NAME_RE.test(val)) {
+    errEl.classList.add('show');
+    inputEl.classList.add('error');
+    btn.disabled = true;
+  } else {
+    errEl.classList.remove('show');
+    inputEl.classList.remove('error');
+    btn.disabled = false;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// MAIN PAGE SETUP & RENDER
+// ═══════════════════════════════════════════════
+function setupMainPage() {
+  document.getElementById('main-room-num').textContent = state.roomCode;
+  if (state.isHost) document.getElementById('nav-settings').style.display = 'flex';
+  renderMain();
+  setupDragDrop();
+}
+
+function renderMain() {
+  // Self
+  document.getElementById('av-self-emoji').textContent = state.self.emoji;
+  document.getElementById('name-self').textContent = state.self.name + '（我）';
+  document.getElementById('score-self').textContent = state.self.score;
+
+  // Seats
+  const seats = ['top', 'left', 'right'];
+  seats.forEach(seat => {
+    const p = state.seats[seat];
+    const avEl = document.getElementById('av-' + seat);
+    const nameEl = document.getElementById('name-' + seat);
+    const ppEl = document.getElementById('pp-' + seat);
+    if (p) {
+      avEl.textContent = p.emoji;
+      nameEl.textContent = p.name;
+      ppEl.style.display = 'flex';
+    } else {
+      ppEl.style.display = 'none';
+    }
+  });
+
+  // Pool
+  document.getElementById('pool-num').textContent = state.pool;
+}
+
+// ═══════════════════════════════════════════════
+// PLAYER TAP → TRANSFER SHEET
+// ═══════════════════════════════════════════════
+function handlePlayerTap(seat) {
+  const p = state.seats[seat];
+  if (!p) return;
+  state.transferTarget = seat;
+  document.getElementById('transfer-rec-av').textContent = p.emoji;
+  document.getElementById('transfer-rec-name').textContent = p.name;
+  document.getElementById('transfer-amount').value = '';
+  document.getElementById('transfer-dir-hint').textContent = `你将付出多少分给 ${p.name}？`;
+  openSheet('transfer');
+}
+
+function updateTransferHint() {
+  const amt = parseInt(document.getElementById('transfer-amount').value) || 0;
+  const target = state.seats[state.transferTarget];
+  if (!target) return;
+  document.getElementById('transfer-dir-hint').textContent =
+    amt > 0 ? `你将付出 ${amt} 分给 ${target.name}` : `你将付出多少分给 ${target.name}？`;
+}
+
+function confirmTransfer() {
+  const amt = parseInt(document.getElementById('transfer-amount').value);
+  if (!amt || amt <= 0) { showToast('请输入有效分数'); return; }
+  const target = state.seats[state.transferTarget];
+  if (!target) return;
+
+  state.self.score -= amt;
+  state.gameStarted = true;
+  addHistory({ desc: `${state.self.name} → ${target.name}`, amt, selfDelta: -amt, type: 'transfer' });
+  closeSheet('transfer');
+  renderMain();
+  showToast('转账成功');
+}
+
+// ═══════════════════════════════════════════════
+// POOL ACTIONS
+// ═══════════════════════════════════════════════
+function openPoolSheet() {
+  document.getElementById('pool-sheet-num').textContent = state.pool;
+  document.getElementById('pool-collect-amt').textContent = state.pool;
+  const collectBtn = document.getElementById('pool-collect-btn');
+  if (state.pool <= 0) {
+    collectBtn.className = 'pool-btn pool-btn-disabled';
+    collectBtn.disabled = true;
+  } else {
+    collectBtn.className = 'pool-btn pool-btn-collect';
+    collectBtn.disabled = false;
+  }
+}
+
+function poolAction(action) {
+  if (action === 'pay') {
+    state.self.score -= 1;
+    state.pool += 1;
+    addHistory({ desc: `${state.self.name} 交公池`, amt: 1, selfDelta: -1, type: 'pool-pay' });
+    showToast('已交1分到公池');
+  } else if (action === 'collect') {
+    if (state.pool <= 0) return;
+    const amt = state.pool;
+    state.self.score += amt;
+    state.pool = 0;
+    addHistory({ desc: `${state.self.name} 收公池`, amt, selfDelta: +amt, type: 'pool-collect' });
+    showToast(`收到公池 ${amt} 分`);
+  }
+  state.gameStarted = true;
+  closeSheet('pool');
+  renderMain();
+}
+
+// ═══════════════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════════════
+let histId = 0;
+function addHistory(entry) {
+  entry.id = ++histId;
+  state.history.unshift(entry);
+}
+
+function openHistorySheet() {
+  const list = document.getElementById('hist-list');
+  if (state.history.length === 0) {
+    list.innerHTML = '<div class="hist-empty">暂无记录</div>';
+    return;
+  }
+  list.innerHTML = '';
+  state.history.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'hist-item';
+
+    const isRevoke = item.type === 'revoke';
+    const isRevoked = item.revoked;
+
+    let amtClass = 'ha-pool';
+    if (isRevoke) amtClass = 'ha-gray';
+    else if (item.type === 'transfer') amtClass = item.selfDelta < 0 ? 'ha-neg' : 'ha-pos';
+    else if (item.type === 'pool-pay') amtClass = 'ha-neg';
+    else if (item.type === 'pool-collect') amtClass = 'ha-pos';
+
+    const amtSign = item.selfDelta >= 0 ? '+' : '-';
+    const descStyle = (isRevoke || isRevoked) ? 'color:var(--gray-dis);' : '';
+    const revokeCol = (!isRevoke && !isRevoked)
+      ? `<button class="revoke-btn" onclick="revokeHistory(${item.id})">撤回</button>`
+      : `<span style="font-size:11px;color:var(--gray-dis);margin-left:8px;white-space:nowrap;">${isRevoked ? '已撤回' : ''}</span>`;
+
+    row.innerHTML = `
+      <span class="hist-desc" style="${descStyle}">${item.desc}</span>
+      <span class="hist-amt ${amtClass}" style="${isRevoke || isRevoked ? 'opacity:0.45;' : ''}">${amtSign}${item.amt}</span>
+      ${revokeCol}
+    `;
+    list.appendChild(row);
+  });
+}
+
+function revokeHistory(id) {
+  state.pendingConfirm = {
+    title: '撤回确认',
+    msg: '确认撤回这条记录吗？该操作会还原对应分数变动。',
+    action: () => doRevoke(id),
+  };
+  openConfirm();
+}
+
+function doRevoke(id) {
+  const idx = state.history.findIndex(h => h.id === id);
+  if (idx === -1) return;
+  const item = state.history[idx];
+
+  // Mark original as revoked (no longer revokable)
+  item.revoked = true;
+
+  // Reverse scores
+  state.self.score -= item.selfDelta;
+  if (item.type === 'pool-pay') state.pool -= 1;
+  if (item.type === 'pool-collect') state.pool += item.amt;
+
+  // Add a new revoke record at the top
+  addHistory({
+    desc: `【撤回】${item.desc}`,
+    amt: item.amt,
+    selfDelta: -item.selfDelta,
+    type: 'revoke',
+  });
+
+  closeSheet('history');
+  renderMain();
+  showToast('已撤回');
+}
+
+// ═══════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════
+function updateInitScore() {
+  const val = parseInt(document.getElementById('setting-init-score').value);
+  if (!isNaN(val)) state.initScore = val;
+}
+
+function openSettingsSheet() {
+  document.getElementById('setting-init-score').value = state.initScore;
+  buildKickList();
+  openSheet('settings');
+}
+
+function buildKickList() {
+  const list = document.getElementById('kick-list');
+  list.innerHTML = '';
+  const seats = ['top', 'left', 'right'];
+  const occupied = seats.filter(s => state.seats[s]);
+  if (occupied.length === 0) {
+    list.innerHTML = '<div style="font-size:13px;color:var(--text-light);padding:6px 0;">暂无其他玩家</div>';
+    return;
+  }
+  occupied.forEach(seat => {
+    const p = state.seats[seat];
+    const row = document.createElement('div');
+    row.className = 'kick-item';
+    row.innerHTML = `
+      <div class="kick-av">${p.emoji}</div>
+      <div class="kick-name">${p.name}</div>
+      <button class="kick-btn" onclick="confirmKick('${seat}')">踢出</button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function confirmKick(seat) {
+  const p = state.seats[seat];
+  if (!p) return;
+  state.pendingConfirm = {
+    title: '踢出玩家',
+    msg: `确认将「${p.name}」踢出房间吗？`,
+    action: () => doKick(seat),
+  };
+  openConfirm();
+}
+
+function doKick(seat) {
+  state.seats[seat] = null;
+  closeSheet('settings');
+  renderMain();
+  showToast('已踢出玩家');
+}
+
+function confirmReset() {
+  state.pendingConfirm = {
+    title: '重置房间',
+    msg: '所有玩家分数将重置为初始分数，交易记录清空。确认重置吗？',
+    action: doReset,
+  };
+  openConfirm();
+}
+
+function doReset() {
+  state.self.score = state.initScore;
+  ['top', 'left', 'right'].forEach(seat => {
+    if (state.seats[seat]) state.seats[seat].score = state.initScore;
+  });
+  state.pool = 0;
+  state.history = [];
+  state.gameStarted = false;
+  closeSheet('settings');
+  renderMain();
+  showToast('房间已重置');
+}
+
+function confirmDissolve() {
+  state.pendingConfirm = {
+    title: '解散房间',
+    msg: '解散后所有数据将清除，所有玩家将退出房间。确认解散吗？',
+    action: doDissolve,
+  };
+  openConfirm();
+}
+
+function doDissolve() {
+  // Return to entry page and reset all state
+  Object.assign(state, {
+    roomCode: '', initScore: 200, gameStarted: false, pool: 0,
+    seats: { top: null, left: null, right: null },
+    self: { name: '', emoji: '🍡', score: 0 },
+    history: [],
+  });
+  closeSheet('settings');
+  showPage('page-entry');
+  showToast('房间已解散');
+}
+
+// ═══════════════════════════════════════════════
+// DRAG & DROP — SEAT SWAP (touch only)
+//   tap (<300ms, <8px move)  → transfer sheet
+//   long-press 300ms + drag  → seat swap
+//   self avatar NOT draggable
+// ═══════════════════════════════════════════════
+let _touch = null;     // { seat, startX, startY, dragging, timer }
+let _dragFrom = null;  // seat key of avatar being dragged
+let _dragGhost = null;
+let _dragOver = null;
+
+function setupDragDrop() {
+  ['top', 'left', 'right'].forEach(seat => {
+    const av = document.getElementById('av-' + seat);
+    av.addEventListener('touchstart',  e => _onTouchStart(e, seat),  { passive: false });
+    av.addEventListener('touchmove',   e => _onTouchMove(e),          { passive: false });
+    av.addEventListener('touchend',    e => _onTouchEnd(e, seat));
+    av.addEventListener('touchcancel', e => _cancelDrag());
+  });
+}
+
+function _onTouchStart(e, seat) {
+  if (!state.seats[seat]) return;
+  e.preventDefault(); // prevents synthesized click — we call handlePlayerTap manually
+
+  const t = e.touches[0];
+  _touch = {
+    seat, startX: t.clientX, startY: t.clientY, dragging: false,
+    timer: setTimeout(() => {
+      if (!_touch || _touch.seat !== seat) return;
+      _touch.dragging = true;
+      _dragFrom = seat;
+      _spawnGhost(seat, t.clientX, t.clientY);
+    }, 300),
+  };
+}
+
+function _onTouchMove(e) {
+  if (!_touch) return;
+  const t = e.touches[0];
+
+  if (_touch.dragging) {
+    e.preventDefault();
+    _moveGhost(t.clientX, t.clientY);
+    _detectOver(t.clientX, t.clientY);
+  } else {
+    const dx = t.clientX - _touch.startX;
+    const dy = t.clientY - _touch.startY;
+    if (Math.sqrt(dx * dx + dy * dy) > 8) {
+      // Too much movement before long-press — cancel
+      clearTimeout(_touch.timer);
+      _touch = null;
+    }
+  }
+}
+
+function _onTouchEnd(e, seat) {
+  if (!_touch || _touch.seat !== seat) return;
+  clearTimeout(_touch.timer);
+  const wasDragging = _touch.dragging;
+  _touch = null;
+
+  if (!wasDragging) {
+    handlePlayerTap(seat); // tap → transfer
+  } else {
+    _finishDrag();
+  }
+}
+
+function _cancelDrag() {
+  if (_touch) { clearTimeout(_touch.timer); _touch = null; }
+  _cleanupDrag();
+  _dragFrom = null;
+}
+
+// ── Ghost ──
+function _spawnGhost(seat, cx, cy) {
+  _dragGhost = document.createElement('div');
+  _dragGhost.className = 'drag-ghost';
+  _dragGhost.textContent = state.seats[seat].emoji;
+  document.getElementById('app').appendChild(_dragGhost);
+  _moveGhost(cx, cy);
+  document.getElementById('av-' + seat).style.opacity = '0.35';
+}
+
+function _moveGhost(cx, cy) {
+  if (!_dragGhost) return;
+  const r = document.getElementById('app').getBoundingClientRect();
+  _dragGhost.style.left = (cx - r.left) + 'px';
+  _dragGhost.style.top  = (cy - r.top)  + 'px';
+}
+
+function _detectOver(cx, cy) {
+  let over = null;
+
+  // Check self bottom position
+  const sr = document.getElementById('pp-bottom').getBoundingClientRect();
+  if (cx >= sr.left && cx <= sr.right && cy >= sr.top && cy <= sr.bottom) over = 'self';
+
+  // Check other seats (not the one being dragged)
+  if (!over) {
+    ['top', 'left', 'right'].forEach(s => {
+      if (s === _dragFrom || !state.seats[s]) return;
+      const r = document.getElementById('pp-' + s).getBoundingClientRect();
+      if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) over = s;
+    });
+  }
+
+  _dragOver = over;
+  ['top', 'left', 'right', 'bottom'].forEach(s => {
+    document.getElementById('pp-' + s)?.classList.toggle('drag-over', s === over);
+  });
+}
+
+function _cleanupDrag() {
+  if (_dragGhost) { _dragGhost.remove(); _dragGhost = null; }
+  ['top', 'left', 'right', 'bottom'].forEach(s => {
+    document.getElementById('pp-' + s)?.classList.remove('drag-over');
+    const av = document.getElementById('av-' + s);
+    if (av) av.style.opacity = '';
+  });
+}
+
+function _finishDrag() {
+  const from   = _dragFrom;
+  const target = _dragOver;
+  _cleanupDrag();
+  _dragFrom = null;
+  _dragOver = null;
+
+  if (!from || !target || target === from) return;
+
+  const fromPlayer = state.seats[from];
+  const toIsSelf   = target === 'self';
+  const toPlayer   = toIsSelf ? state.self : state.seats[target];
+  if (!fromPlayer) return;
+
+  document.getElementById('swap-av-self').textContent  = fromPlayer.emoji;
+  document.getElementById('swap-av-other').textContent = toPlayer?.emoji ?? '?';
+  document.getElementById('swap-desc').textContent =
+    `确认将「${fromPlayer.name}」和「${toIsSelf ? state.self.name : (toPlayer?.name ?? '空位')}」互换座位吗？`;
+  state.pendingSwap = { from, to: target };
+  document.getElementById('swap-confirm').classList.add('open');
+}
+
+function cancelSwap() {
+  state.pendingSwap = null;
+  document.getElementById('swap-confirm').classList.remove('open');
+}
+
+function confirmSwap() {
+  if (!state.pendingSwap) return;
+  const { from, to } = state.pendingSwap;
+
+  if (to === 'self') {
+    // swap from-seat player with self
+    const tmp = { ...state.self };
+    state.self.name = state.seats[from].name;
+    state.self.emoji = state.seats[from].emoji;
+    // Keep scores, only swap identity/display
+    state.seats[from] = { name: tmp.name, emoji: tmp.emoji, score: state.seats[from].score };
+  } else {
+    // swap two non-self seats
+    const tmp = state.seats[from];
+    state.seats[from] = state.seats[to];
+    state.seats[to] = tmp;
+  }
+
+  state.pendingSwap = null;
+  document.getElementById('swap-confirm').classList.remove('open');
+  renderMain();
+  showToast('换座成功');
+}
+
+// ═══════════════════════════════════════════════
+// SHEETS
+// ═══════════════════════════════════════════════
+function openSheet(name) {
+  if (name === 'pool') openPoolSheet();
+  if (name === 'history') openHistorySheet();
+
+  const el = document.getElementById('sheet-' + name);
+  if (!el) return;
+  el.classList.add('open');
+}
+
+function closeSheet(name) {
+  const el = document.getElementById('sheet-' + name);
+  if (!el) return;
+  el.classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════
+// CONFIRM DIALOG
+// ═══════════════════════════════════════════════
+function openConfirm() {
+  const d = state.pendingConfirm;
+  if (!d) return;
+  document.getElementById('confirm-title').textContent = d.title;
+  document.getElementById('confirm-msg').textContent = d.msg;
+  document.getElementById('confirm-dialog').classList.add('open');
+}
+
+function closeConfirm() {
+  state.pendingConfirm = null;
+  document.getElementById('confirm-dialog').classList.remove('open');
+}
+
+function executeConfirm() {
+  if (state.pendingConfirm?.action) state.pendingConfirm.action();
+  closeConfirm();
+}
+
+// ═══════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+// ═══════════════════════════════════════════════
+// INIT — keyboard on entry page
+// ═══════════════════════════════════════════════
+const roomInput = document.getElementById('room-code-input');
+roomInput.addEventListener('input', () => {
+  roomInput.value = roomInput.value.replace(/\D/g, '').slice(0, 4);
+});
+roomInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') enterRoom();
+});
+document.getElementById('name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const val = document.getElementById('name-input').value.trim();
+    if (val) enterIdentity();
+  }
+});
+</script>
+</body>
+</html>

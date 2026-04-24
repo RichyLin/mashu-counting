@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>麻薯计分 — 设计稿</title>
+  <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #C8BFB0;
+      font-family: 'ZCOOL KuaiLe', 'PingFang SC', 'Noto Sans SC', cursive;
+      padding: 48px 32px 80px;
+    }
+
+    .showcase-header {
+      text-align: center; margin-bottom: 52px;
+    }
+    .showcase-header h1 {
+      font-size: 26px; color: #3D6B4F;
+      letter-spacing: 0.2em; margin-bottom: 8px;
+    }
+    .showcase-header p { font-size: 12px; color: rgba(74,55,40,0.4); letter-spacing: 0.14em; }
+
+    .screens-row {
+      display: flex; gap: 28px; overflow-x: auto; padding-bottom: 32px; align-items: flex-start;
+    }
+    .screens-row::-webkit-scrollbar { height: 6px; }
+    .screens-row::-webkit-scrollbar-track { background: rgba(0,0,0,0.06); border-radius: 3px; }
+    .screens-row::-webkit-scrollbar-thumb { background: rgba(122,171,138,0.5); border-radius: 3px; }
+
+    .screen-item { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .screen-label { text-align: center; }
+    .screen-label strong { display: block; color: #3D6B4F; font-size: 14px; margin-bottom: 4px; }
+    .screen-label span { font-size: 12px; color: rgba(74,55,40,0.45); }
+
+    /* Phone frame */
+    .phone {
+      width: 375px; height: 812px;
+      border-radius: 44px;
+      border: 10px solid #8A7D70;
+      box-shadow: 0 0 0 1.5px #7A6D60, 0 40px 80px rgba(74,55,40,0.25), inset 0 0 0 1px rgba(255,255,255,0.4);
+      overflow: hidden; position: relative;
+      background: #F5F0E8;
+    }
+    .phone::before {
+      content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 110px; height: 28px; background: #8A7D70;
+      border-radius: 0 0 18px 18px; z-index: 200;
+    }
+
+    /* ─── 配色系统 ─── */
+    :root {
+      /* 主色 */
+      --matcha:     #7AAB8A;   /* 抹茶绿 */
+      --matcha-d:   #5A8A6A;   /* 深抹茶 */
+      --matcha-l:   #B8D4C0;   /* 嫩芽绿 */
+      --mochi:      #F5F0E8;   /* 糯米白 */
+      --pink:       #E8A0A8;   /* 樱花粉 */
+      --brown:      #4A3728;   /* 深棕 */
+      /* 功能色 */
+      --gold:       #F0C84A;   /* 黄金 */
+      --gold-d:     #E8A84A;
+      --green-plus: #6DB88A;   /* 加分绿 */
+      --red-minus:  #E87070;   /* 扣分红 */
+      --gray-dis:   #D4C4B0;   /* 禁用灰 */
+      /* 常用 */
+      --text:       #4A3728;
+      --text-dim:   rgba(74,55,40,0.5);
+      --text-light: rgba(74,55,40,0.28);
+      --shadow:     rgba(74,55,40,0.12);
+      --border:     rgba(74,55,40,0.15);
+    }
+
+    /* ── 通用深棕描边卡片 ── */
+    .card {
+      background: #FFFFFF;
+      border: 1.5px solid var(--brown);
+      border-radius: 16px;
+      box-shadow: 0 4px 12px var(--shadow);
+    }
+
+    /* ══════════════════════════════════
+       SCREEN 1 — ENTRY
+    ══════════════════════════════════ */
+    .s-entry {
+      width: 100%; height: 100%;
+      background: var(--mochi);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 70px 32px 52px;
+      position: relative; overflow: hidden;
+    }
+    /* 背景装饰 */
+    .s-entry::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 70% 55% at 50% 35%, rgba(184,212,192,0.55) 0%, transparent 100%);
+    }
+    .deco { position: absolute; border-radius: 50%; border: 1.5px dashed rgba(122,171,138,0.2); }
+    .d1 { width: 240px; height: 240px; top: -80px; right: -70px; }
+    .d2 { width: 160px; height: 160px; bottom: 120px; left: -55px; }
+
+    /* IP Logo — 正视图 */
+    .ip-logo {
+      width: 120px; height: 130px;
+      margin: 0 auto 16px;
+      position: relative;
+    }
+    .ip-logo img { width: 100%; height: 100%; object-fit: contain; }
+
+    .brand-name {
+      font-size: 34px; color: var(--matcha-d);
+      letter-spacing: 0.22em; text-align: center; margin-bottom: 4px;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+    }
+    .brand-sub { font-size: 12px; color: var(--text-dim); letter-spacing: 0.25em; text-align: center; margin-bottom: 52px; }
+
+    .room-label-txt { font-size: 12px; color: var(--text-dim); letter-spacing: 0.2em; text-align: center; margin-bottom: 12px; }
+    .room-input-box {
+      width: 100%; background: #FFFFFF;
+      border: 2px solid var(--brown); border-radius: 16px;
+      padding: 18px; font-size: 38px; color: var(--brown);
+      text-align: center; letter-spacing: 0.5em;
+      font-family: 'Fredoka', sans-serif; font-weight: 700;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 12px var(--shadow);
+    }
+    .entry-btn {
+      width: 100%; padding: 18px;
+      background: linear-gradient(160deg, var(--matcha) 0%, var(--matcha-d) 100%);
+      border: 2px solid var(--brown); border-radius: 16px;
+      color: #FFFFFF; font-size: 18px; font-family: 'ZCOOL KuaiLe', cursive;
+      letter-spacing: 0.22em;
+      box-shadow: 0 4px 12px var(--shadow), 0 2px 0 var(--brown);
+      cursor: pointer;
+    }
+    .entry-note { margin-top: 16px; font-size: 12px; color: var(--text-light); text-align: center; }
+
+    /* ══════════════════════════════════
+       SCREEN 2 — IDENTITY
+    ══════════════════════════════════ */
+    .s-identity {
+      width: 100%; height: 100%;
+      background: var(--mochi);
+      display: flex; flex-direction: column;
+      padding: 72px 28px 48px;
+      position: relative; overflow: hidden;
+    }
+    .s-identity::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 55% 32% at 50% 8%, rgba(184,212,192,0.45) 0%, transparent 100%);
+    }
+    .id-back { font-size: 14px; color: var(--text-dim); margin-bottom: 24px; position: relative; }
+    .id-header { margin-bottom: 40px; position: relative; }
+    .id-header h2 { font-size: 28px; color: var(--brown); letter-spacing: 0.1em; margin-bottom: 6px; }
+    .id-header p { font-size: 13px; color: var(--matcha); letter-spacing: 0.12em; }
+
+    .avatar-area { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 40px; position: relative; }
+    .avatar-ring {
+      width: 96px; height: 96px; border-radius: 50%;
+      background: var(--matcha-l);
+      border: 2px solid var(--brown);
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      box-shadow: 0 4px 12px var(--shadow);
+    }
+    .avatar-ring .def-icon { font-size: 42px; }
+    .avatar-cam {
+      position: absolute; bottom: 0; right: 0;
+      width: 28px; height: 28px; background: var(--gold);
+      border: 1.5px solid var(--brown);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+    }
+    .avatar-hint { font-size: 12px; color: var(--text-dim); }
+
+    .field-label { font-size: 12px; color: var(--text-dim); letter-spacing: 0.14em; display: block; margin-bottom: 10px; }
+    .text-input {
+      width: 100%; background: #FFFFFF;
+      border: 1.5px solid var(--brown); border-radius: 14px;
+      padding: 16px 20px; font-size: 16px; color: var(--text-light);
+      font-family: 'ZCOOL KuaiLe', cursive;
+      margin-bottom: 32px;
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+    .text-input.filled { color: var(--text); }
+
+    /* ══════════════════════════════════
+       SCREEN 3 — MAIN TABLE
+    ══════════════════════════════════ */
+    .s-main {
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      background: #E8F0EB;
+      overflow: hidden;
+    }
+    .tbl-header {
+      height: 56px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 20px 0;
+      background: rgba(245,240,232,0.9);
+      border-bottom: 1.5px solid rgba(74,55,40,0.1);
+      backdrop-filter: blur(6px);
+      position: relative; z-index: 10;
+    }
+    .room-info { display: flex; align-items: baseline; gap: 6px; }
+    .room-word { font-size: 12px; color: var(--text-dim); letter-spacing: 0.1em; }
+    .room-num { font-size: 22px; font-weight: 700; color: var(--matcha-d); font-family: 'Fredoka', sans-serif; letter-spacing: 0.18em; }
+
+    .tbl-area {
+      flex: 1; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    /* 桌面背景光晕 */
+    .tbl-area::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 75% at 50% 50%, rgba(122,171,138,0.35) 0%, #D8EAD8 100%);
+    }
+
+    /* 麻将桌：抹茶绿椭圆 */
+    .felt-oval {
+      position: absolute;
+      width: 292px; height: 452px;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: radial-gradient(ellipse 80% 70% at 38% 35%, #8ABE96 0%, #6EA07A 55%, #5A8A6A 100%);
+      border: 2.5px solid var(--brown);
+      box-shadow:
+        0 0 0 4px rgba(122,171,138,0.25),
+        0 16px 48px rgba(74,55,40,0.2),
+        inset 0 0 60px rgba(74,55,40,0.1);
+    }
+    /* 桌面内圈装饰 */
+    .felt-oval::after {
+      content: ''; position: absolute; inset: 14px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    /* 玩家位置 */
+    .pp { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 5; }
+    .pp-top    { top: 14px;   left: 50%; transform: translateX(-50%); }
+    .pp-left   { left: 8px;   top: 50%;  transform: translateY(-50%); }
+    .pp-right  { right: 8px;  top: 50%;  transform: translateY(-50%); }
+    .pp-bottom { bottom: 2px; left: 50%; transform: translateX(-50%); }
+
+    /* 玩家头像卡片 */
+    .av {
+      width: 56px; height: 56px; border-radius: 50%;
+      border: 2px solid var(--brown);
+      background: var(--mochi);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700; color: var(--brown);
+      font-family: 'ZCOOL KuaiLe', cursive;
+      box-shadow: 0 4px 10px rgba(74,55,40,0.2);
+      position: relative;
+    }
+    /* 自己：金色描边 */
+    .av-self {
+      width: 64px; height: 64px; font-size: 22px;
+      border: 2.5px solid var(--gold);
+      box-shadow: 0 0 0 3px rgba(240,200,74,0.3), 0 4px 12px rgba(74,55,40,0.2);
+    }
+    .crown { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 16px; }
+    .name-tag {
+      background: #FFFFFF; border: 1.5px solid var(--brown);
+      border-radius: 20px; padding: 3px 10px;
+      font-size: 11px; color: var(--brown);
+      white-space: nowrap;
+      box-shadow: 0 2px 6px var(--shadow);
+    }
+    .score-self {
+      font-size: 24px; font-weight: 700;
+      color: var(--brown);
+      font-family: 'Fredoka', sans-serif;
+    }
+
+    /* ─── 公池：侧躺 IP 倚靠分数框 ─── */
+    .pool-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -52%);
+      z-index: 6;
+      display: flex; flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+    }
+    /* 侧躺图：宽扁横向，贴合分数框上方 */
+    .pool-ip-img {
+      width: 148px; height: 88px;
+      object-fit: contain;
+      object-position: bottom center;
+      display: block;
+      position: relative;
+      z-index: 2;
+      margin-bottom: -12px; /* 压住分数框顶部，制造倚靠感 */
+      filter: drop-shadow(0 4px 6px rgba(74,55,40,0.2));
+    }
+    /* 分数框：金色，带深棕描边 */
+    .pool-score-box {
+      background: linear-gradient(160deg, var(--gold) 0%, var(--gold-d) 100%);
+      border: 2px solid var(--brown);
+      border-radius: 20px;
+      padding: 7px 20px;
+      display: flex; align-items: baseline; gap: 4px;
+      box-shadow: 0 4px 12px rgba(74,55,40,0.2), 0 2px 0 rgba(74,55,40,0.3);
+      position: relative; z-index: 1;
+    }
+    .pool-lbl { font-size: 13px; color: var(--brown); letter-spacing: 0.06em; }
+    .pool-num { font-size: 24px; font-weight: 700; color: var(--brown); font-family: 'Fredoka', sans-serif; }
+    .pool-unit { font-size: 13px; color: var(--brown); }
+
+    /* 底部导航 */
+    .btm-nav {
+      height: 68px; flex-shrink: 0;
+      background: rgba(245,240,232,0.95);
+      border-top: 1.5px solid rgba(74,55,40,0.1);
+      display: flex; align-items: center; justify-content: space-around;
+      padding: 0 60px 10px;
+    }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+    .nav-ico { font-size: 22px; }
+    .nav-txt { font-size: 12px; color: var(--text-dim); }
+
+    /* ══════════════════════════════════
+       BOTTOM SHEETS
+    ══════════════════════════════════ */
+    .s-sheet { width: 100%; height: 100%; position: relative; overflow: hidden; }
+    .sheet-dim {
+      position: absolute; inset: 0;
+      background: rgba(74,55,40,0.3);
+      backdrop-filter: blur(3px); z-index: 10;
+    }
+    .sheet-panel {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: var(--mochi);
+      border-top-left-radius: 24px; border-top-right-radius: 24px;
+      border-top: 2px solid var(--brown);
+      z-index: 20; padding: 0 24px 44px;
+      box-shadow: 0 -8px 32px rgba(74,55,40,0.15);
+    }
+    .sheet-knob { width: 36px; height: 4px; background: var(--gray-dis); border-radius: 2px; margin: 14px auto 20px; }
+    .sheet-ttl { font-size: 20px; color: var(--brown); letter-spacing: 0.14em; text-align: center; margin-bottom: 22px; }
+
+    /* 转账 sheet */
+    .recipient-row {
+      display: flex; align-items: center; gap: 14px;
+      background: #FFFFFF; border: 1.5px solid var(--brown);
+      border-radius: 14px; padding: 14px 16px; margin-bottom: 20px;
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+    .rec-av {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: var(--matcha-l); border: 2px solid var(--brown);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700; color: var(--brown);
+      font-family: 'ZCOOL KuaiLe', cursive;
+    }
+    .rec-info { flex: 1; }
+    .rec-lbl { font-size: 10px; color: var(--text-dim); letter-spacing: 0.12em; margin-bottom: 3px; }
+    .rec-name { font-size: 16px; color: var(--brown); }
+    .lock-badge {
+      font-size: 11px; color: var(--matcha-d);
+      border: 1px solid var(--matcha); border-radius: 8px;
+      padding: 3px 9px; background: rgba(122,171,138,0.12);
+    }
+    .amt-lbl { font-size: 12px; color: var(--text-dim); letter-spacing: 0.12em; display: block; margin-bottom: 10px; }
+    .amt-box {
+      width: 100%; background: #FFFFFF;
+      border: 2px solid var(--brown); border-radius: 14px;
+      padding: 16px; font-size: 44px; color: var(--brown);
+      text-align: center;
+      font-family: 'Fredoka', sans-serif; font-weight: 700;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+    /* 主按钮：樱花粉（转账专用） */
+    .pink-btn {
+      width: 100%; padding: 18px;
+      background: linear-gradient(160deg, #F0B0B8 0%, var(--pink) 100%);
+      border: 2px solid var(--brown); border-radius: 16px;
+      color: var(--brown); font-size: 18px; font-family: 'ZCOOL KuaiLe', cursive;
+      letter-spacing: 0.18em;
+      box-shadow: 0 4px 12px var(--shadow), 0 2px 0 var(--brown);
+      cursor: pointer;
+    }
+    /* 主按钮：抹茶绿 */
+    .green-btn {
+      width: 100%; padding: 18px;
+      background: linear-gradient(160deg, var(--matcha) 0%, var(--matcha-d) 100%);
+      border: 2px solid var(--brown); border-radius: 16px;
+      color: #FFFFFF; font-size: 18px; font-family: 'ZCOOL KuaiLe', cursive;
+      letter-spacing: 0.18em;
+      box-shadow: 0 4px 12px var(--shadow), 0 2px 0 var(--brown);
+      cursor: pointer;
+    }
+
+    /* 公池 sheet */
+    .pool-summary {
+      text-align: center;
+      background: linear-gradient(160deg, var(--gold) 0%, var(--gold-d) 100%);
+      border: 2px solid var(--brown); border-radius: 16px;
+      padding: 18px; margin-bottom: 22px;
+      box-shadow: 0 4px 12px var(--shadow);
+    }
+    .pool-sum-lbl { font-size: 12px; color: var(--brown); opacity: 0.7; letter-spacing: 0.12em; margin-bottom: 4px; }
+    .pool-sum-num { font-size: 52px; font-weight: 700; color: var(--brown); font-family: 'Fredoka', sans-serif; line-height: 1; }
+    .pool-sum-unit { font-size: 14px; color: var(--brown); opacity: 0.7; margin-top: 2px; }
+    .pool-btn-row { display: flex; flex-direction: column; gap: 12px; }
+    .pool-btn {
+      width: 100%; padding: 18px; border-radius: 16px;
+      font-size: 18px; font-family: 'ZCOOL KuaiLe', cursive; letter-spacing: 0.1em;
+      border: 2px solid var(--brown); cursor: pointer;
+      box-shadow: 0 2px 0 var(--brown);
+    }
+    .pool-btn-in { background: var(--matcha-l); color: var(--brown); }
+    .pool-btn-collect { background: linear-gradient(160deg, var(--gold) 0%, var(--gold-d) 100%); color: var(--brown); }
+    .pool-btn-disabled { background: var(--gray-dis); color: rgba(74,55,40,0.35); border-color: var(--gray-dis); box-shadow: none; }
+
+    /* 历史 sheet */
+    .hist-list { display: flex; flex-direction: column; }
+    .hist-item {
+      display: flex; align-items: center;
+      padding: 14px 0; border-bottom: 1px solid rgba(74,55,40,0.08); gap: 8px;
+    }
+    .hist-item:last-child { border-bottom: none; }
+    .hist-desc { flex: 1; font-size: 14px; color: var(--brown); }
+    .hist-amt { font-size: 16px; font-family: 'Fredoka', sans-serif; font-weight: 700; min-width: 38px; text-align: right; }
+    .ha-neg  { color: var(--red-minus); }
+    .ha-pos  { color: var(--green-plus); }
+    .ha-pool { color: #C8940A; }
+    .ha-gray { color: var(--gray-dis); }
+    .revoke-btn {
+      background: #FFFFFF; border: 1.5px solid rgba(74,55,40,0.2);
+      border-radius: 8px; padding: 4px 10px;
+      color: rgba(74,55,40,0.45); font-size: 12px;
+      font-family: 'ZCOOL KuaiLe', cursive;
+      cursor: pointer; white-space: nowrap; margin-left: 8px;
+    }
+    .no-revoke { font-size: 11px; color: var(--gray-dis); margin-left: 8px; white-space: nowrap; }
+
+    /* 设置 sheet */
+    .setting-lbl { font-size: 12px; color: var(--text-dim); letter-spacing: 0.12em; display: block; margin-bottom: 10px; }
+    .setting-input {
+      width: 100%; background: #FFFFFF;
+      border: 2px solid var(--brown); border-radius: 14px;
+      padding: 14px 20px; font-size: 24px; color: var(--brown);
+      font-family: 'Fredoka', sans-serif; font-weight: 700;
+      margin-bottom: 6px; box-shadow: 0 2px 8px var(--shadow);
+    }
+    .setting-hint { font-size: 11px; color: var(--text-dim); margin-bottom: 22px; }
+    .divider { height: 1px; background: rgba(74,55,40,0.08); margin: 20px 0; }
+    .danger-btn {
+      width: 100%; padding: 18px;
+      background: rgba(232,112,112,0.1);
+      border: 2px solid var(--red-minus); border-radius: 16px;
+      color: var(--red-minus); font-size: 17px;
+      font-family: 'ZCOOL KuaiLe', cursive; letter-spacing: 0.1em;
+      cursor: pointer;
+    }
+
+    /* ── 弹窗后面的主界面（暗化） ── */
+    .mini-main {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      background: #E8F0EB;
+      filter: brightness(0.65) saturate(0.7);
+    }
+  </style>
+</head>
+<body>
+
+<div class="showcase-header">
+  <h1>麻 薯 计 分</h1>
+  <p>UI 设计稿 · 全 7 页 · 和风糯点心配色</p>
+</div>
+
+<div class="screens-row">
+
+  <!-- ①  ENTRY -->
+  <div class="screen-item">
+    <div class="screen-label"><strong>① 入口页</strong><span>输入房间号</span></div>
+    <div class="phone">
+      <div class="s-entry">
+        <div class="deco d1"></div>
+        <div class="deco d2"></div>
+        <div>
+          <div class="ip-logo">
+            <img src="./ip-standing.jpg" alt="麻薯">
+          </div>
+          <div class="brand-name">麻薯计分</div>
+          <div class="brand-sub">贵 州 捉 鸡 麻 将</div>
+        </div>
+        <div style="width:100%; margin-top:8px; position:relative;">
+          <div class="room-label-txt">输 入 房 间 号</div>
+          <div class="room-input-box">8 8 8 8</div>
+          <button class="entry-btn">进 入 房 间</button>
+          <div class="entry-note">房间不存在将自动创建</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ②  IDENTITY -->
+  <div class="screen-item">
+    <div class="screen-label"><strong>② 身份设置</strong><span>首次进入房间</span></div>
+    <div class="phone">
+      <div class="s-identity">
+        <div class="id-back">‹ 返回</div>
+        <div class="id-header">
+          <h2>设 置 身 份</h2>
+          <p>房间 8888</p>
+        </div>
+        <div class="avatar-area">
+          <div class="avatar-ring">
+            <span class="def-icon">🍡</span>
+            <div class="avatar-cam">📷</div>
+          </div>
+          <div class="avatar-hint">点击更换头像（可跳过）</div>
+        </div>
+        <span class="field-label">你 的 名 字</span>
+        <div class="text-input">请输入姓名</div>
+        <button class="green-btn" style="margin-top:auto;">进 入 房 间</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③  MAIN TABLE -->
+  <div class="screen-item">
+    <div class="screen-label"><strong>③ 主界面</strong><span>仅自己分数可见</span></div>
+    <div class="phone">
+      <div class="s-main">
+        <div class="tbl-header">
+          <div class="room-info">
+            <span class="room-word">房间</span>
+            <span class="room-num">8888</span>
+          </div>
+        </div>
+        <div class="tbl-area">
+          <div class="felt-oval"></div>
+          <div class="pp pp-top">
+            <div class="av">熊</div>
+            <div class="name-tag">小熊</div>
+          </div>
+          <div class="pp pp-left">
+            <div class="av">福</div>
+            <div class="name-tag">阿福</div>
+          </div>
+          <div class="pp pp-right">
+            <div class="av">虎</div>
+            <div class="name-tag">老虎</div>
+          </div>
+          <!-- 公池：侧躺 IP 倚靠分数框 -->
+          <div class="pool-center">
+            <img class="pool-ip-img" src="./ip-reclining.jpg" alt="公池">
+            <div class="pool-score-box">
+              <span class="pool-lbl">公池</span>
+              <span class="pool-num">7</span>
+              <span class="pool-unit">分</span>
+            </div>
+          </div>
+          <div class="pp pp-bottom">
+            <div class="score-self">200</div>
+            <div class="av av-self">
+              <div class="crown">👑</div>铭
+            </div>
+            <div class="name-tag">阿铭（我）</div>
+          </div>
+        </div>
+        <div class="btm-nav">
+          <div class="nav-item"><div class="nav-ico">📋</div><div class="nav-txt">记录</div></div>
+          <div class="nav-item"><div class="nav-ico">⚙️</div><div class="nav-txt">设置</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ④  TRANSFER SHEET -->
+  <div class="screen-item">
+    <div class="screen-label"><strong>④ 转账</strong><span>点击对方头像弹出</span></div>
+    <div class="phone">
+      <div class="s-sheet">
+        <div class="mini-main">
+          <div class="tbl-header"><div class="room-info"><span class="room-word">房间</span><span class="room-num">8888</span></div></div>
+          <div class="tbl-area">
+            <div class="felt-oval"></div>
+            <div class="pp pp-top"><div class="av">熊</div><div class="name-tag">小熊</div></div>
+            <div class="pp pp-left"><div class="av">福</div><div class="name-tag">阿福</div></div>
+            <div class="pp pp-right"><div class="av" style="border-color:var(--gold);">虎</div><div class="name-tag">老虎</div></div>
+            <div class="pool-center"><img class="pool-ip-img" src="./ip-reclining.jpg" alt=""><div class="pool-score-box"><span class="pool-lbl">公池</span><span class="pool-num">7</span><span class="pool-unit">分</span></div></div>
+            <div class="pp pp-bottom"><div class="score-self">200</div><div class="av av-self"><div class="crown">👑</div>铭</div><div class="name-tag">阿铭（我）</div></div>
+          </div>
+          <div class="btm-nav"></div>
+        </div>
+        <div class="sheet-dim"></div>
+        <div class="sheet-panel" style="height:415px;">
+          <div class="sheet-knob"></div>
+          <div class="sheet-ttl">转 账</div>
+          <div class="recipient-row">
+            <div class="rec-av">虎</div>
+            <div class="rec-info"><div class="rec-lbl">收 款 方</div><div class="rec-name">老虎</div></div>
+            <div class="lock-badge">已锁定</div>
+          </div>
+          <span class="amt-lbl">转 出 分 数</span>
+          <div class="amt-box">5</div>
+          <button class="pink-btn">确 认 转 账</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤  POOL SHEET -->
+  <div class="screen-item">
+    <div class="screen-label"><strong>⑤ 公池操作</strong><span>点击公池弹出</span></div>
+    <div class="phone">
+      <div class="s-sheet">
+        <div class="mini-main">
+          <div class="tbl-header"><div class="room-info"><span class="room-word">房间</span><span class="room-num">8888</span></div></div>
+          <div class="tbl-area">
+            <div class="felt-oval"></div>
+            <div class="pp pp-top"><div class="av">熊</div><div class="name-tag">小熊</div></div>
+            <div class="pp pp-left"><div class="av">福</div><div class="name-tag">阿福</div></div>
+            <div class="pp pp-right"><div class="av">虎</div><div class="name-tag">老虎</div></div>
+            <div class="pool-center"><img class="pool-ip-img" src="./ip-reclining.jpg" alt=""><div class="pool-score-box"><span class="pool-lbl">公池</span><span class="pool-num">7</span><span class="pool-unit">分</span></div></div>
+            <div class="pp pp-bottom"><div class="score-self">200</div><div class="av av-self"><div class="crown">👑</div>铭</div><div class="name-tag">阿铭（我）</div></div>
+          </div>
+          <div class="btm-nav"></div>
+        </div>
+        <div class="sheet-dim"></div>
+        <div class="sheet-panel" style="height:375px;">
+          <div class="sheet-knob"></div>
+          <div class="sheet-ttl">公 池 操 作</div>
+          <div class="pool-summary">
+            <div class="pool-sum-lbl">当 前 公 池</div>
+            <div class="pool-sum-num">7</div>
+            <div class="pool-sum-unit">分</div>
+          </div>
+          <div class="pool-btn-row">
+            <button class="pool-btn pool-btn-in">交 公 池 &nbsp;−1 分</button>
+            <button class="pool-btn pool-btn-collect">收 公 池 &nbsp;+7 分</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑥  HISTORY SHEET -->
+  <div class="screen-item">
+    <div class="screen-label"><strong>⑥ 历史记录</strong><span>「记录」按钮</span></div>
+    <div class="phone">
+      <div class="s-sheet">
+        <div class="mini-main">
+          <div class="tbl-header"><div class="room-info"><span class="room-word">房间</span><span class="room-num">8888</span></div></div>
+          <div class="tbl-area">
+            <div class="felt-oval"></div>
+            <div class="pp pp-top"><div class="av">熊</div></div>
+            <div class="pp pp-left"><div class="av">福</div></div>
+            <div class="pp pp-right"><div class="av">虎</div></div>
+            <div class="pool-center"><img class="pool-ip-img" src="./ip-reclining.jpg" alt=""></div>
+            <div class="pp pp-bottom"><div class="av av-self"><div class="crown">👑</div>铭</div></div>
+          </div>
+          <div class="btm-nav"></div>
+        </div>
+        <div class="sheet-dim"></div>
+        <div class="sheet-panel" style="height:535px;">
+          <div class="sheet-knob"></div>
+          <div class="sheet-ttl">历 史 记 录</div>
+          <div class="hist-list">
+            <div class="hist-item">
+              <span class="hist-desc">老虎 → 我 转账</span>
+              <span class="hist-amt ha-pos">+5</span>
+              <button class="revoke-btn">撤回</button>
+            </div>
+            <div class="hist-item">
+              <span class="hist-desc">我 交公池</span>
+              <span class="hist-amt ha-neg">−1</span>
+              <button class="revoke-btn">撤回</button>
+            </div>
+            <div class="hist-item">
+              <span class="hist-desc">我 收公池</span>
+              <span class="hist-amt ha-pool">+4</span>
+              <button class="revoke-btn">撤回</button>
+            </div>
+            <div class="hist-item">
+              <span class="hist-desc">我 → 阿福 转账</span>
+              <span class="hist-amt ha-neg">−3</span>
+              <button class="revoke-btn">撤回</button>
+            </div>
+            <div class="hist-item">
+              <span class="hist-desc">我 交公池</span>
+              <span class="hist-amt ha-neg">−1</span>
+              <button class="revoke-btn">撤回</button>
+            </div>
+            <div class="hist-item">
+              <span class="hist-desc" style="color:var(--gray-dis);">房间重置</span>
+              <span class="hist-amt ha-gray">—</span>
+              <span class="no-revoke">不可撤回</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑦  SETTINGS SHEET -->
+  <div class="screen-item">
+    <div class="screen-label"><strong>⑦ 设置</strong><span>仅房主可见</span></div>
+    <div class="phone">
+      <div class="s-sheet">
+        <div class="mini-main">
+          <div class="tbl-header"><div class="room-info"><span class="room-word">房间</span><span class="room-num">8888</span></div></div>
+          <div class="tbl-area">
+            <div class="felt-oval"></div>
+            <div class="pp pp-top"><div class="av">熊</div></div>
+            <div class="pp pp-left"><div class="av">福</div></div>
+            <div class="pp pp-right"><div class="av">虎</div></div>
+            <div class="pool-center"><img class="pool-ip-img" src="./ip-reclining.jpg" alt=""></div>
+            <div class="pp pp-bottom"><div class="av av-self"><div class="crown">👑</div>铭</div></div>
+          </div>
+          <div class="btm-nav"></div>
+        </div>
+        <div class="sheet-dim"></div>
+        <div class="sheet-panel" style="height:395px;">
+          <div class="sheet-knob"></div>
+          <div class="sheet-ttl">房 间 设 置</div>
+          <span class="setting-lbl">初 始 分 数</span>
+          <div class="setting-input">200</div>
+          <div class="setting-hint">* 首笔交易发生后不可修改</div>
+          <div class="divider"></div>
+          <button class="danger-btn">🔄 &nbsp;重 置 所 有 人 分 数</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

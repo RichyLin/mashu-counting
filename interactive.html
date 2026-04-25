@@ -114,11 +114,17 @@
       color: #FFFFFF; font-size: 18px; font-family: 'ZCOOL KuaiLe', cursive;
       letter-spacing: 0.22em;
       box-shadow: 0 4px 12px var(--shadow), 0 2px 0 var(--brown);
-      cursor: pointer; border: none; position: relative;
-      border: 2px solid var(--brown);
+      cursor: pointer; position: relative;
     }
     .entry-btn:active { transform: translateY(1px); }
+    .entry-btn-secondary {
+      background: #fff;
+      color: var(--brown);
+      box-shadow: 0 2px 8px var(--shadow), 0 2px 0 var(--brown);
+    }
     .entry-note { margin-top: 16px; font-size: 12px; color: var(--text-light); text-align: center; }
+    .entry-error { min-height: 20px; font-size: 12px; color: var(--red-minus); text-align: center; margin: -4px 0 10px; }
+    .entry-back { margin-top: 16px; font-size: 13px; color: var(--matcha-d); text-align: center; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 
     /* ═══════════════════════════════
        PAGE: IDENTITY
@@ -597,13 +603,19 @@
     <div style="position:relative;text-align:center;">
       <div class="ip-logo"><img src="./ip-standing.jpg" alt="麻薯"></div>
       <div class="brand-name">麻薯计分</div>
-      <div class="brand-sub">贵 州 捉 鸡 麻 将</div>
     </div>
-    <div style="width:100%;margin-top:8px;position:relative;">
-      <div class="room-label-txt">输 入 房 间 号</div>
+    <!-- 初始状态：两个按钮 -->
+    <div id="entry-btns" style="width:100%;margin-top:24px;display:flex;flex-direction:column;gap:14px;">
+      <button class="entry-btn" onclick="selectMode('create')">创 建 房 间</button>
+      <button class="entry-btn entry-btn-secondary" onclick="selectMode('join')">加 入 房 间</button>
+    </div>
+    <!-- 输入状态：选择模式后展示 -->
+    <div id="entry-input" style="width:100%;margin-top:24px;display:none;">
+      <div class="room-label-txt" id="entry-mode-label">输 入 新 房 间 号</div>
       <input id="room-code-input" class="room-input-box" type="text" inputmode="numeric" maxlength="4" placeholder="8888" pattern="\d{4}">
-      <button class="entry-btn" onclick="enterRoom()">进 入 房 间</button>
-      <div class="entry-note">房间不存在将自动创建</div>
+      <div class="entry-error" id="entry-error"></div>
+      <button class="entry-btn" id="entry-confirm-btn" onclick="confirmRoom()">确 认</button>
+      <div class="entry-back" onclick="resetEntry()">返 回</div>
     </div>
   </div>
 
@@ -833,15 +845,57 @@ function showPage(id) {
   document.getElementById(id).classList.add('active');
 }
 
-function enterRoom() {
+let entryMode = null; // 'create' | 'join'
+const demoRooms = new Set(['8888']); // 演示用：8888 是已存在的房间
+
+function selectMode(mode) {
+  entryMode = mode;
+  document.getElementById('entry-btns').style.display = 'none';
+  document.getElementById('entry-input').style.display = 'block';
+  document.getElementById('entry-mode-label').textContent =
+    mode === 'create' ? '输 入 新 房 间 号' : '输 入 房 间 号';
+  document.getElementById('entry-confirm-btn').textContent =
+    mode === 'create' ? '创 建' : '加 入';
+  document.getElementById('entry-error').textContent = '';
+  document.getElementById('room-code-input').value = '';
+  document.getElementById('room-code-input').focus();
+}
+
+function resetEntry() {
+  entryMode = null;
+  document.getElementById('entry-btns').style.display = 'flex';
+  document.getElementById('entry-input').style.display = 'none';
+  document.getElementById('entry-error').textContent = '';
+  document.getElementById('room-code-input').value = '';
+}
+
+function confirmRoom() {
   const input = document.getElementById('room-code-input');
-  let code = input.value.replace(/\D/g, '').slice(0, 4);
+  const errorEl = document.getElementById('entry-error');
+  const code = input.value.replace(/\D/g, '').slice(0, 4);
   if (code.length !== 4) { showToast('请输入4位数字房间号'); input.focus(); return; }
+
+  if (entryMode === 'create') {
+    if (demoRooms.has(code)) {
+      errorEl.textContent = '该房间号已存在，请加入或换一个号码';
+      return;
+    }
+    demoRooms.add(code);
+  } else {
+    if (!demoRooms.has(code)) {
+      errorEl.textContent = '该房间号不存在，请检查号码或创建新房间';
+      return;
+    }
+  }
+
+  errorEl.textContent = '';
   state.roomCode = code;
   document.getElementById('id-room-label').textContent = '房间 ' + code;
   buildEmojiPicker();
   showPage('page-identity');
 }
+
+function enterRoom() { confirmRoom(); } // 向后兼容
 
 function goBack() {
   showPage('page-entry');
@@ -1431,7 +1485,7 @@ roomInput.addEventListener('input', () => {
   roomInput.value = roomInput.value.replace(/\D/g, '').slice(0, 4);
 });
 roomInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') enterRoom();
+  if (e.key === 'Enter') confirmRoom();
 });
 document.getElementById('name-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') {

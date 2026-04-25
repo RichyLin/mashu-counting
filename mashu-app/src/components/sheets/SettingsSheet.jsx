@@ -77,7 +77,7 @@ export default function SettingsSheet({ open, onClose, toast, onDissolved }) {
 
           {/* 危险操作 */}
           <div style={{ height: 1, background: 'rgba(74,55,40,0.08)', margin: '8px 0 16px' }} />
-          <button className="btn-danger" onClick={handleReset} style={{ marginBottom: 10 }}>重 置 房 间</button>
+          <button className="btn-danger" onClick={handleReset} style={{ marginBottom: 10 }}>重 置 分 数</button>
           <button className="btn-danger" onClick={handleDissolve}>解 散 房 间</button>
         </div>
       </div>

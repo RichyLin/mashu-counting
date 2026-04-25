@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useRoom, getViewPos } from '../context/RoomContext'
+import { clearStoredPlayer } from '../lib/deviceId'
 import { useToast, Toast } from '../components/Toast'
 import TransferSheet from '../components/sheets/TransferSheet'
 import PoolSheet from '../components/sheets/PoolSheet'
@@ -126,6 +127,16 @@ export default function TablePage() {
   const [swapReq, setSwapReq] = useState(null) // { from, to }
 
   const isHost = room?.host_device_id === myPlayer?.device_id
+
+  // 被踢出时跳回首页
+  useEffect(() => {
+    if (!myPlayer || loading) return
+    const stillIn = players.some(p => p.id === myPlayer.id)
+    if (!stillIn) {
+      clearStoredPlayer(room?.code)
+      nav('/')
+    }
+  }, [players, myPlayer, loading, room, nav])
 
   // 视图旋转：其他玩家的 DB seat → 相对于我的显示位置
   const mySeat = myPlayer?.seat ?? 'bottom'

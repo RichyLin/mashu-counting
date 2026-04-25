@@ -30,7 +30,7 @@ export default function EntryPage() {
           <img src="/ip-standing.jpg" alt="麻薯" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         </div>
         <div style={{ fontSize: 34, color: 'var(--matcha-d)', letterSpacing: '0.22em', marginBottom: 4, textShadow: '0 1px 0 rgba(255,255,255,0.8)' }}>麻薯计分</div>
-        <div style={{ fontSize: 12, color: 'var(--text-dim)', letterSpacing: '0.25em', marginBottom: 52 }}>贵 州 捉 鸡 麻 将</div>
+        <div style={{ marginBottom: 52 }} />
       </div>
 
       {/* 输入区 */}

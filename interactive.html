@@ -125,6 +125,14 @@
     .entry-note { margin-top: 16px; font-size: 12px; color: var(--text-light); text-align: center; }
     .entry-error { min-height: 20px; font-size: 12px; color: var(--red-minus); text-align: center; margin: -4px 0 10px; }
     .entry-back { margin-top: 16px; font-size: 13px; color: var(--matcha-d); text-align: center; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+    .exit-room-btn {
+      width: 100%; padding: 16px;
+      background: #fff; border: 2px solid var(--brown);
+      border-radius: 14px; color: var(--brown);
+      font-size: 16px; font-family: 'ZCOOL KuaiLe', cursive;
+      letter-spacing: 0.14em; cursor: pointer;
+      box-shadow: 0 2px 6px var(--shadow);
+    }
 
     /* ═══════════════════════════════
        PAGE: IDENTITY
@@ -695,7 +703,7 @@
       <div class="nav-item" onclick="openSheet('history')">
         <div class="nav-ico">📋</div><div class="nav-txt">记录</div>
       </div>
-      <div class="nav-item" id="nav-settings" onclick="openSettingsSheet()" style="display:none;">
+      <div class="nav-item" id="nav-settings" onclick="openSettingsSheet()">
         <div class="nav-ico">⚙️</div><div class="nav-txt">设置</div>
       </div>
     </div>
@@ -751,18 +759,24 @@
   <!-- ── SHEET: SETTINGS ── -->
   <div id="sheet-settings" class="sheet-overlay">
     <div class="sheet-dim" onclick="closeSheet('settings')"></div>
-    <div class="sheet-panel">
+    <div class="sheet-panel" style="max-height:80vh;overflow-y:auto;">
       <div class="sheet-knob"></div>
       <div class="sheet-ttl">房间设置</div>
-      <span class="setting-lbl">初 始 分 数</span>
-      <input class="setting-input" id="setting-init-score" type="number" inputmode="numeric" value="200" onchange="updateInitScore()">
-      <div class="setting-hint">仅影响重置后的分数</div>
-      <div class="divider"></div>
-      <span class="setting-lbl">踢 出 玩 家</span>
-      <div class="kick-list" id="kick-list"></div>
-      <div class="divider"></div>
-      <button class="danger-btn" onclick="confirmReset()" style="margin-bottom:10px;">重 置 房 间</button>
-      <button class="danger-btn" onclick="confirmDissolve()">解 散 房 间</button>
+      <!-- 房主专属 -->
+      <div id="host-settings">
+        <span class="setting-lbl">初 始 分 数</span>
+        <input class="setting-input" id="setting-init-score" type="number" inputmode="numeric" value="200" onchange="updateInitScore()">
+        <div class="setting-hint">仅影响重置后的分数</div>
+        <div class="divider"></div>
+        <span class="setting-lbl">踢 出 玩 家</span>
+        <div class="kick-list" id="kick-list"></div>
+        <div class="divider"></div>
+        <button class="danger-btn" onclick="confirmReset()" style="margin-bottom:10px;">重 置 分 数</button>
+        <button class="danger-btn" onclick="confirmDissolve()" style="margin-bottom:16px;">解 散 房 间</button>
+        <div class="divider" style="margin-bottom:16px;"></div>
+      </div>
+      <!-- 所有人可见 -->
+      <button class="exit-room-btn" onclick="confirmLeave()">退 出 房 间</button>
     </div>
   </div>
 
@@ -890,6 +904,7 @@ function confirmRoom() {
 
   errorEl.textContent = '';
   state.roomCode = code;
+  state.isHost = (entryMode === 'create');
   document.getElementById('id-room-label').textContent = '房间 ' + code;
   buildEmojiPicker();
   showPage('page-identity');
@@ -973,7 +988,6 @@ function checkNameInput() {
 // ═══════════════════════════════════════════════
 function setupMainPage() {
   document.getElementById('main-room-num').textContent = state.roomCode;
-  if (state.isHost) document.getElementById('nav-settings').style.display = 'flex';
   renderMain();
   setupDragDrop();
 }
@@ -1163,9 +1177,47 @@ function updateInitScore() {
 }
 
 function openSettingsSheet() {
-  document.getElementById('setting-init-score').value = state.initScore;
-  buildKickList();
+  const hostEl = document.getElementById('host-settings');
+  hostEl.style.display = state.isHost ? 'block' : 'none';
+  if (state.isHost) {
+    document.getElementById('setting-init-score').value = state.initScore;
+    buildKickList();
+  }
   openSheet('settings');
+}
+
+function confirmLeave() {
+  const others = ['top','left','right'].filter(s => state.seats[s]);
+  let msg;
+  if (state.isHost && others.length === 0) {
+    msg = '你是唯一的玩家，退出后房间将自动解散。确认退出吗？';
+  } else if (state.isHost) {
+    const nextHost = state.seats[others[0]];
+    msg = `你是房主，退出后「${nextHost.name}」将成为新房主。确认退出吗？`;
+  } else {
+    msg = '确认退出房间吗？退出后可重新输入房间号加入。';
+  }
+  state.pendingConfirm = { title: '退出房间', msg, action: doLeave };
+  openConfirm();
+}
+
+function doLeave() {
+  const others = ['top','left','right'].filter(s => state.seats[s]);
+  if (state.isHost && others.length === 0) {
+    doDissolve(); return;
+  }
+  if (state.isHost) {
+    showToast(`${state.seats[others[0]].name} 成为新房主`);
+  }
+  Object.assign(state, {
+    roomCode: '', initScore: 200, gameStarted: false, pool: 0,
+    seats: { top: null, left: null, right: null },
+    self: { name: '', emoji: '🍡', score: 0 },
+    isHost: true, history: [],
+  });
+  closeSheet('settings');
+  resetEntry();
+  showPage('page-entry');
 }
 
 function buildKickList() {

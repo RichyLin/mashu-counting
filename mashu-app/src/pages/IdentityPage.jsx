@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import * as db from '../lib/db'
 import { getDeviceId, storePlayerId } from '../lib/deviceId'
 
-const EMOJIS = ['🍡', '🐼', '🐨', '🦊', '🐸', '🐯', '🐻', '🐙', '🦄', '🐝', '🦋', '🍀', '🌸', '⭐', '🎃']
+const EMOJIS = ['🍡', '🐼', '🐨', '🦊', '🐸', '🐯', '🐻', '🐙', '🦄', '🐝', '🦋', '🍀', '🌸', '⭐', '🎃', '🐶', '🐱', '🐭', '🐹', '🐰']
 const BENCH_SEATS = ['bench-left', 'bench-right']
 const NAME_RE = /^[\u4e00-\u9fa5a-zA-Z0-9]+$/
 

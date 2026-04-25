@@ -128,11 +128,13 @@ export default function TablePage() {
 
   const isHost = room?.host_device_id === myPlayer?.device_id
 
-  // 被踢出时跳回首页
+  // 被踢出时跳回首页（用 ref 避免初始化时误判）
+  const confirmedInRoom = useRef(false)
   useEffect(() => {
-    if (!myPlayer || loading) return
+    if (loading || !myPlayer) return
     const stillIn = players.some(p => p.id === myPlayer.id)
-    if (!stillIn) {
+    if (stillIn) { confirmedInRoom.current = true; return }
+    if (confirmedInRoom.current) {
       clearStoredPlayer(room?.code)
       nav('/')
     }
@@ -209,8 +211,18 @@ export default function TablePage() {
 
   // ─── avatar 渲染 helper
   function renderOtherAvatar(viewPos, player) {
-    if (!player) return null
     const isOver = dragOver === viewPos
+    if (!player) {
+      // 空位：渲染占位元素供拖拽检测
+      return (
+        <div style={POS_STYLE[viewPos]} data-seat={viewPos}>
+          <div
+            data-seat={viewPos}
+            style={{ width: 56, height: 56, borderRadius: '50%', border: `2px dashed ${isOver ? 'var(--gold)' : 'rgba(74,55,40,0.18)'}`, background: isOver ? 'rgba(240,200,74,0.12)' : 'transparent', transition: 'all 0.15s' }}
+          />
+        </div>
+      )
+    }
     return (
       <div style={POS_STYLE[viewPos]} data-seat={viewPos}>
         <div
@@ -267,7 +279,7 @@ export default function TablePage() {
         </div>
 
         {/* 自己（下方） */}
-        <div style={POS_STYLE.bottom} data-seat="bottom">
+        <div style={POS_STYLE.bottom}>
           <div style={{ width: 64, height: 64, borderRadius: '50%', border: '2.5px solid var(--gold)', background: 'var(--mochi)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, boxShadow: '0 0 0 3px rgba(240,200,74,0.3), 0 4px 12px rgba(74,55,40,0.2)', position: 'relative' }}>
             <span style={{ position: 'absolute', top: -18, left: '50%', transform: 'translateX(-50%)', fontSize: 16 }}>
               {isHost ? '👑' : ''}

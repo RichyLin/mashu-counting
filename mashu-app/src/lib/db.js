@@ -5,6 +5,16 @@ const SEAT_ORDER = ['bottom', 'top', 'left', 'right', 'bench-left', 'bench-right
 
 // ── 房间 ──────────────────────────────────────────────────────
 
+export async function getActiveRoom(code) {
+  const { data } = await supabase
+    .from('rooms')
+    .select('*')
+    .eq('code', code)
+    .eq('status', 'active')
+    .maybeSingle()
+  return data ?? null
+}
+
 export async function getOrCreateRoom(code, deviceId) {
   const { data: existing } = await supabase
     .from('rooms')

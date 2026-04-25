@@ -15,11 +15,23 @@ export async function getOrCreateRoom(code, deviceId) {
 
   if (existing) return { data: existing, error: null }
 
-  return supabase
+  const { data: created, error: createErr } = await supabase
     .from('rooms')
     .insert({ code, host_device_id: deviceId })
     .select()
     .single()
+
+  if (!createErr) return { data: created, error: null }
+
+  // 唯一约束冲突：房间已存在（并发或网络抖动导致第一次查询漏掉），重试查找
+  const { data: retry, error: retryErr } = await supabase
+    .from('rooms')
+    .select('*')
+    .eq('code', code)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  return { data: retry ?? null, error: retry ? null : retryErr }
 }
 
 export async function getRoom(roomId) {

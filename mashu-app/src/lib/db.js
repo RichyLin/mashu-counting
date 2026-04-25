@@ -149,3 +149,15 @@ export async function revokeTransaction(roomId, txId) {
 export async function resetRoom(roomId, initScore) {
   return supabase.rpc('perform_reset', { p_room_id: roomId, p_init_score: initScore })
 }
+
+export async function swapSeats(playerAId, playerBId) {
+  return supabase.rpc('perform_swap', { p_player_a: playerAId, p_player_b: playerBId })
+}
+
+export async function moveSeat(playerId, newSeat) {
+  return supabase.rpc('perform_move_seat', { p_player_id: playerId, p_new_seat: newSeat })
+}
+
+export async function leaveRoom(roomId, playerId) {
+  return supabase.rpc('perform_leave', { p_room_id: roomId, p_player_id: playerId })
+}

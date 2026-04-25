@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
 import { useRoom, getViewPos } from '../context/RoomContext'
 import { clearStoredPlayer } from '../lib/deviceId'
 import { useToast, Toast } from '../components/Toast'
@@ -105,14 +104,13 @@ export default function TablePage() {
   async function confirmSwap() {
     if (!swapReq) return
     const { pFrom, pTo } = swapReq
+    let error
     if (pTo.isEmpty) {
-      await supabase.from('players').update({ seat: pTo.seat }).eq('id', pFrom.id)
+      ;({ error } = await db.moveSeat(pFrom.id, pTo.seat))
     } else {
-      await Promise.all([
-        supabase.from('players').update({ seat: pTo.seat }).eq('id', pFrom.id),
-        supabase.from('players').update({ seat: pFrom.seat }).eq('id', pTo.id),
-      ])
+      ;({ error } = await db.swapSeats(pFrom.id, pTo.id))
     }
+    if (error) { toast('换座失败：' + error.message); return }
     setSwapReq(null)
     setSwapMode(false)
     toast('换座成功')
@@ -359,19 +357,17 @@ export default function TablePage() {
           <span style={{ fontSize: 22 }}>📋</span>
           <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>记录</span>
         </div>
-        {isHost && (
-          <div onClick={() => setSheet('settings')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, cursor: 'pointer' }}>
-            <span style={{ fontSize: 22 }}>⚙️</span>
-            <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>设置</span>
-          </div>
-        )}
+        <div onClick={() => setSheet('settings')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, cursor: 'pointer' }}>
+          <span style={{ fontSize: 22 }}>⚙️</span>
+          <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>设置</span>
+        </div>
       </div>
 
       {/* ── Sheets ── */}
       <TransferSheet open={sheet === 'transfer'} targetPlayer={transferTarget} onClose={() => setSheet(null)} toast={toast} />
       <PoolSheet     open={sheet === 'pool'}     onClose={() => setSheet(null)} toast={toast} />
       <HistorySheet  open={sheet === 'history'}  onClose={() => setSheet(null)} toast={toast} />
-      {isHost && <SettingsSheet open={sheet === 'settings'} onClose={() => setSheet(null)} toast={toast} onDissolved={() => nav('/')} />}
+      <SettingsSheet open={sheet === 'settings'} onClose={() => setSheet(null)} toast={toast} onDissolved={() => nav('/')} />
 
       {/* 换座确认弹窗 */}
       {swapReq && (

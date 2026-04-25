@@ -104,13 +104,10 @@ export default function TablePage() {
   async function confirmSwap() {
     if (!swapReq) return
     const { pFrom, pTo } = swapReq
-    let error
-    if (pTo.isEmpty) {
-      ;({ error } = await db.moveSeat(pFrom.id, pTo.seat))
-    } else {
-      ;({ error } = await db.swapSeats(pFrom.id, pTo.id))
-    }
-    if (error) { toast('换座失败：' + error.message); return }
+    const result = pTo.isEmpty
+      ? await db.moveSeat(pFrom.id, pTo.seat)
+      : await db.swapSeats(pFrom.id, pTo.id)
+    if (result.error) { toast('换座失败：' + result.error.message); return }
     setSwapReq(null)
     setSwapMode(false)
     toast('换座成功')
@@ -389,7 +386,7 @@ export default function TablePage() {
             </div>
             <div className="dialog-btns">
               <button className="dialog-cancel" onClick={() => setSwapReq(null)}>取消</button>
-              <button style={{ flex: 1, padding: 14, background: 'linear-gradient(160deg, var(--matcha) 0%, var(--matcha-d) 100%)', border: '2px solid var(--brown)', borderRadius: 14, fontSize: 15, color: '#fff' }} onClick={confirmSwap}>确认换座</button>
+              <button type="button" style={{ flex: 1, padding: 14, background: 'linear-gradient(160deg, var(--matcha) 0%, var(--matcha-d) 100%)', border: '2px solid var(--brown)', borderRadius: 14, fontSize: 15, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }} onClick={confirmSwap}>确认换座</button>
             </div>
           </div>
         </div>

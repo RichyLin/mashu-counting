@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import * as db from '../lib/db'
 import { getDeviceId, storePlayerId } from '../lib/deviceId'
 
 const EMOJIS = ['🍡', '🐼', '🐨', '🦊', '🐸', '🐯', '🐻', '🐙', '🦄', '🐝', '🦋', '🍀', '🌸', '⭐', '🎃']
+const BENCH_SEATS = ['bench-left', 'bench-right']
 const NAME_RE = /^[\u4e00-\u9fa5a-zA-Z0-9]+$/
 
 export default function IdentityPage({ room, onJoined }) {
@@ -13,6 +14,12 @@ export default function IdentityPage({ room, onJoined }) {
   const [name, setName] = useState('')
   const [nameErr, setNameErr] = useState('')
   const [loading, setLoading] = useState(false)
+  // undefined = checking, null = full, string = available seat
+  const [nextSeat, setNextSeat] = useState(undefined)
+
+  useEffect(() => {
+    db.getAvailableSeat(room.id).then(seat => setNextSeat(seat ?? null))
+  }, [room.id])
 
   function handleName(e) {
     const val = e.target.value.slice(0, 6)
@@ -32,7 +39,7 @@ export default function IdentityPage({ room, onJoined }) {
     try {
       const deviceId = getDeviceId()
       const seat = await db.getAvailableSeat(room.id)
-      if (!seat) { alert('房间已满（4人）'); setLoading(false); return }
+      if (!seat) { alert('房间已满（最多6人）'); setLoading(false); return }
 
       const { data: player, error } = await db.createPlayer(
         room.id, deviceId, name.trim(), emoji, seat, room.init_score
@@ -93,7 +100,18 @@ export default function IdentityPage({ room, onJoined }) {
         />
         {nameErr && <div style={{ fontSize: 11, color: 'var(--red-minus)', marginBottom: 22 }}>{nameErr}</div>}
 
-        <button className="btn-green" onClick={handleEnter} disabled={!canSubmit}>
+        {BENCH_SEATS.includes(nextSeat) && (
+          <div style={{ background: 'rgba(122,171,138,0.15)', border: '1.5px solid var(--matcha)', borderRadius: 12, padding: '10px 14px', fontSize: 12, color: 'var(--matcha-d)', marginBottom: 16, letterSpacing: '0.05em', lineHeight: 1.6 }}>
+            📋 当前桌位已满，你将以<strong>备战席</strong>身份加入，可转账和交公池，但不可收公池。
+          </div>
+        )}
+        {nextSeat === null && (
+          <div style={{ background: 'rgba(232,112,112,0.1)', border: '1.5px solid var(--red-minus)', borderRadius: 12, padding: '10px 14px', fontSize: 12, color: 'var(--red-minus)', marginBottom: 16 }}>
+            房间已满（最多6人），无法加入。
+          </div>
+        )}
+
+        <button className="btn-green" onClick={handleEnter} disabled={!canSubmit || nextSeat === null || nextSeat === undefined}>
           {loading ? '进入中…' : '进 入 房 间'}
         </button>
       </div>

@@ -1,7 +1,7 @@
 import { supabase } from './supabase'
 
-// 座位分配顺序：第一个玩家（房主）得到 bottom
-const SEAT_ORDER = ['bottom', 'top', 'left', 'right']
+// 座位分配顺序：前4人入桌，第5/6人入备战席
+const SEAT_ORDER = ['bottom', 'top', 'left', 'right', 'bench-left', 'bench-right']
 
 // ── 房间 ──────────────────────────────────────────────────────
 

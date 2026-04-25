@@ -266,7 +266,7 @@
     .pp-bottom { bottom: 2px; left: 50%; transform: translateX(-50%); }
 
     .av {
-      width: 56px; height: 56px; border-radius: 50%;
+      width: 62px; height: 62px; border-radius: 50%;
       border: 2px solid var(--brown);
       background: var(--mochi);
       display: flex; align-items: center; justify-content: center;
@@ -309,7 +309,7 @@
       cursor: pointer;
     }
     .pool-ip-img {
-      width: 148px; height: 88px;
+      width: 128px; height: 76px;
       object-fit: contain; object-position: bottom center;
       display: block; position: relative; z-index: 2;
       margin-bottom: -12px;
@@ -355,6 +355,99 @@
       transition: opacity 0.1s;
     }
     .pp.drag-over .av { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(240,200,74,0.4); }
+
+    /* ── Bench seat positions ── */
+    .pp-bench-L { top: 10px; left: 10px; z-index: 5; }
+    .pp-bench-R { top: 10px; right: 10px; z-index: 5; }
+    .bench-badge {
+      font-size: 9px; color: rgba(255,255,255,0.85);
+      background: rgba(74,55,40,0.52); border-radius: 5px;
+      padding: 2px 6px; letter-spacing: 0.06em;
+      margin-bottom: 3px; white-space: nowrap;
+    }
+    .av-bench {
+      width: 46px; height: 46px; border-radius: 50%;
+      border: 2px dashed var(--matcha-d);
+      background: rgba(245,240,232,0.95);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 3px 8px rgba(74,55,40,0.15);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .av-bench:active { transform: scale(0.93); }
+    .av-bench-self {
+      border: 2.5px solid var(--gold) !important;
+      box-shadow: 0 0 0 3px rgba(240,200,74,0.3), 0 3px 8px rgba(74,55,40,0.15) !important;
+      cursor: default !important;
+    }
+    .name-bench { font-size: 10px; padding: 2px 7px; }
+    .score-bench {
+      font-size: 18px; font-weight: 700; color: var(--brown);
+      font-family: 'Fredoka', sans-serif;
+    }
+
+    /* ── Swap mode banner ── */
+    .swap-mode-banner {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 14;
+      background: rgba(240,200,74,0.92);
+      border-bottom: 2px solid var(--brown);
+      padding: 8px 16px;
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--brown);
+      letter-spacing: 0.06em;
+    }
+    .swap-banner-hint { flex: 1; }
+    .swap-banner-cancel {
+      background: var(--brown); color: #FFF;
+      border: none; border-radius: 8px;
+      padding: 4px 12px; font-size: 12px;
+      font-family: 'ZCOOL KuaiLe', cursive; cursor: pointer;
+    }
+
+    /* ── Swap selectable / selected ── */
+    .swap-selectable .av,
+    .swap-selectable .av-self,
+    .swap-selectable .av-bench {
+      outline: 2px dashed rgba(240,200,74,0.8); outline-offset: 2px; cursor: pointer !important;
+    }
+    .swap-selected .av,
+    .swap-selected .av-self,
+    .swap-selected .av-bench {
+      outline: 3px solid var(--gold); outline-offset: 2px;
+      box-shadow: 0 0 0 5px rgba(240,200,74,0.35) !important;
+    }
+
+    /* ── Bench follow bar ── */
+    .bench-follow-bar {
+      position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+      z-index: 12;
+      background: rgba(74,55,40,0.78); border-radius: 16px; padding: 6px 10px;
+      display: flex; align-items: center; gap: 6px;
+      backdrop-filter: blur(4px);
+    }
+    .follow-lbl { font-size: 10px; color: rgba(255,255,255,0.75); letter-spacing: 0.04em; white-space: nowrap; }
+    .follow-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.25);
+      font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .follow-btn.active-follow { background: var(--gold); border-color: var(--brown); box-shadow: 0 0 0 2px rgba(240,200,74,0.5); }
+
+    /* ── Demo view switcher ── */
+    .demo-player-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; border-radius: 10px; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .demo-player-btn:hover { background: rgba(122,171,138,0.12); }
+    .demo-player-btn.demo-me { background: rgba(240,200,74,0.15); }
+    .demo-av-ico { font-size: 18px; }
+    .demo-pname { font-size: 13px; color: var(--brown); flex: 1; }
+    .demo-bench-tag { font-size: 9px; color: var(--text-dim); background: rgba(74,55,40,0.08); border-radius: 4px; padding: 1px 5px; }
+    .demo-host-tag  { font-size: 9px; color: var(--gold-d);  background: rgba(240,200,74,0.15); border-radius: 4px; padding: 1px 5px; }
 
     /* ═══════════════════════════════
        BOTTOM SHEETS
@@ -656,26 +749,58 @@
         <span class="room-word">房间</span>
         <span class="room-num" id="main-room-num">8888</span>
       </div>
-      <div style="font-size:12px;color:var(--text-dim);letter-spacing:0.08em;" id="online-count">4人在线</div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div style="font-size:12px;color:var(--text-dim);letter-spacing:0.08em;" id="online-count">6人在线</div>
+        <button id="swap-mode-btn" onclick="toggleSwapMode()" style="display:none;background:var(--gold);border:2px solid var(--brown);border-radius:10px;padding:3px 12px;font-size:12px;font-family:'ZCOOL KuaiLe',cursive;color:var(--brown);cursor:pointer;letter-spacing:0.06em;white-space:nowrap;">换 座</button>
+        <button onclick="toggleViewSwitcher()" style="background:rgba(122,171,138,0.18);border:1px solid var(--matcha);border-radius:8px;padding:3px 8px;font-size:11px;color:var(--matcha-d);cursor:pointer;font-family:'ZCOOL KuaiLe',cursive;letter-spacing:0.04em;white-space:nowrap;">👁 视角</button>
+      </div>
     </div>
     <div class="tbl-area" id="tbl-area">
       <div class="felt-oval"></div>
 
+      <!-- Swap mode banner -->
+      <div class="swap-mode-banner" id="swap-mode-banner" style="display:none;">
+        <span class="swap-banner-hint" id="swap-banner-hint">点击任意玩家选择换座</span>
+        <button class="swap-banner-cancel" onclick="toggleSwapMode()">取消</button>
+      </div>
+
+      <!-- Bench left (5th player) -->
+      <div class="pp pp-bench-L" id="pp-bench-L" style="display:none;">
+        <div class="bench-badge" id="bench-badge-L">备战席</div>
+        <div class="av-bench" id="av-bench-L" onclick="handlePlayerTap('bench-left')"></div>
+        <div class="name-tag name-bench" id="name-bench-L"></div>
+        <div class="score-bench" id="score-bench-L" style="display:none;"></div>
+      </div>
+
+      <!-- Bench right (6th player) -->
+      <div class="pp pp-bench-R" id="pp-bench-R" style="display:none;">
+        <div class="bench-badge" id="bench-badge-R">备战席</div>
+        <div class="av-bench" id="av-bench-R" onclick="handlePlayerTap('bench-right')"></div>
+        <div class="name-tag name-bench" id="name-bench-R"></div>
+        <div class="score-bench" id="score-bench-R" style="display:none;"></div>
+      </div>
+
       <!-- Top player -->
-      <div class="pp pp-top" id="pp-top" data-seat="top">
-        <div class="av" id="av-top" onclick="handlePlayerTap('top')"></div>
+      <div class="pp pp-top" id="pp-top">
+        <div class="av" id="av-top" onclick="handlePlayerTap('top')">
+          <div class="crown" id="crown-top" style="display:none;">👑</div>
+        </div>
         <div class="name-tag" id="name-top"></div>
       </div>
 
       <!-- Left player -->
-      <div class="pp pp-left" id="pp-left" data-seat="left">
-        <div class="av" id="av-left" onclick="handlePlayerTap('left')"></div>
+      <div class="pp pp-left" id="pp-left">
+        <div class="av" id="av-left" onclick="handlePlayerTap('left')">
+          <div class="crown" id="crown-left" style="display:none;">👑</div>
+        </div>
         <div class="name-tag" id="name-left"></div>
       </div>
 
       <!-- Right player -->
-      <div class="pp pp-right" id="pp-right" data-seat="right">
-        <div class="av" id="av-right" onclick="handlePlayerTap('right')"></div>
+      <div class="pp pp-right" id="pp-right">
+        <div class="av" id="av-right" onclick="handlePlayerTap('right')">
+          <div class="crown" id="crown-right" style="display:none;">👑</div>
+        </div>
         <div class="name-tag" id="name-right"></div>
       </div>
 
@@ -689,14 +814,23 @@
         </div>
       </div>
 
-      <!-- Self (bottom) -->
-      <div class="pp pp-bottom" id="pp-bottom">
+      <!-- Self (bottom) — onclick handles swap-mode tap and bench-viewer transfers -->
+      <div class="pp pp-bottom" id="pp-bottom" onclick="handlePlayerTap('bottom')">
         <div class="av av-self" id="av-self">
-          <div class="crown">👑</div>
+          <div class="crown" id="crown-self" style="display:none;">👑</div>
           <span id="av-self-emoji"></span>
         </div>
         <div class="name-tag" id="name-self"></div>
         <div class="score-self" id="score-self">0</div>
+      </div>
+
+      <!-- Bench follow bar (visible only when viewer is on bench) -->
+      <div class="bench-follow-bar" id="bench-follow-bar" style="display:none;">
+        <span class="follow-lbl">观看：</span>
+        <div class="follow-btn" data-followseat="bottom" onclick="setBenchFollow('bottom')">·</div>
+        <div class="follow-btn" data-followseat="top"    onclick="setBenchFollow('top')">·</div>
+        <div class="follow-btn" data-followseat="left"   onclick="setBenchFollow('left')">·</div>
+        <div class="follow-btn" data-followseat="right"  onclick="setBenchFollow('right')">·</div>
       </div>
     </div>
     <div class="btm-nav">
@@ -706,6 +840,12 @@
       <div class="nav-item" id="nav-settings" onclick="openSettingsSheet()">
         <div class="nav-ico">⚙️</div><div class="nav-txt">设置</div>
       </div>
+    </div>
+
+    <!-- Demo view switcher dropdown (prototype only) -->
+    <div id="view-switcher" style="display:none;position:absolute;top:56px;right:8px;z-index:500;background:var(--mochi);border:2px solid var(--brown);border-radius:16px;padding:14px 12px;box-shadow:0 8px 24px rgba(74,55,40,0.25);min-width:188px;">
+      <div style="font-size:10px;color:var(--text-dim);letter-spacing:0.1em;margin-bottom:10px;text-align:center;">— 演 示 视 角 切 换 —</div>
+      <div id="demo-player-list" style="display:flex;flex-direction:column;gap:4px;"></div>
     </div>
   </div>
 
@@ -816,40 +956,64 @@
 
 <script>
 // ═══════════════════════════════════════════════
-// STATE
+// CONSTANTS
 // ═══════════════════════════════════════════════
 const EMOJIS = ['🍡', '🐼', '🐨', '🦊', '🐸', '🐯', '🐻', '🐙', '🦄', '🐝', '🦋', '🍀', '🌸', '⭐', '🎃'];
+// Clockwise order of table DB seats (used for view-rotation math)
+const TABLE_CW = ['bottom', 'right', 'top', 'left'];
+const BENCH_SEATS = ['bench-left', 'bench-right'];
+
+// ═══════════════════════════════════════════════
+// STATE — player-centric model with absolute DB seats
+// ═══════════════════════════════════════════════
 
 const state = {
   roomCode: '',
   initScore: 200,
-  gameStarted: false, // once first transaction happens
+  gameStarted: false,
   pool: 0,
-  // seats: top / left / right / bottom(self)
-  seats: {
-    top:   null,
-    left:  null,
-    right: null,
-  },
-  self: {
-    name: '',
-    emoji: '🍡',
-    score: 0,
-  },
-  isHost: true,
-  history: [], // [{id, desc, type, selfDelta, poolDelta}]
-  transferDirection: 'send', // 'send' | 'recv'
-  transferTarget: null, // seat key
+  // All 6 players with absolute DB seats: [{name,emoji,score,dbSeat,isMe,isHost}]
+  players: [],
+  myDbSeat: 'bottom',
+  benchFollowDbSeat: 'bottom', // which table DB seat bench viewer follows
+  swapMode: false,
+  swapFirstDbSeat: null,
+  self: { name: '', emoji: '🍡' }, // temp holder for identity page
+  history: [],
+  transferTarget: null, // dbSeat of transfer target
   pendingConfirm: null,
-  pendingSwap: null, // {seat, fromSelf: true}
+  pendingSwap: null,
 };
 
-// Mock other players
-const MOCK_PLAYERS = [
-  { name: '阿福', emoji: '🐼' },
-  { name: '老虎', emoji: '🐯' },
-  { name: '小熊', emoji: '🐻' },
-];
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+function getMe()         { return state.players.find(p => p.isMe); }
+function getHostPlayer() { return state.players.find(p => p.isHost); }
+function isBenchViewer() { return BENCH_SEATS.includes(state.myDbSeat); }
+function isTableSeat(s)  { return TABLE_CW.includes(s); }
+function getViewerDbSeat() { return isBenchViewer() ? state.benchFollowDbSeat : state.myDbSeat; }
+
+// DB seat → view seat relative to a viewer's DB seat
+function getViewSeat(dbSeat, viewerDbSeat) {
+  const pi = TABLE_CW.indexOf(dbSeat);
+  const vi = TABLE_CW.indexOf(viewerDbSeat);
+  if (pi < 0 || vi < 0) return null;
+  return TABLE_CW[(pi - vi + 4) % 4];
+}
+// View seat → DB seat
+function viewSeatToDbSeat(vs) {
+  if (BENCH_SEATS.includes(vs)) return vs;
+  const vds = getViewerDbSeat();
+  const vi = TABLE_CW.indexOf(vds);
+  const pi = TABLE_CW.indexOf(vs);
+  if (vi < 0 || pi < 0) return null;
+  return TABLE_CW[(pi + vi) % 4];
+}
+function getPlayerAtViewSeat(vs) {
+  const vds = getViewerDbSeat();
+  return state.players.find(p => getViewSeat(p.dbSeat, vds) === vs);
+}
 
 // ═══════════════════════════════════════════════
 // NAVIGATION
@@ -904,7 +1068,7 @@ function confirmRoom() {
 
   errorEl.textContent = '';
   state.roomCode = code;
-  state.isHost = (entryMode === 'create');
+
   document.getElementById('id-room-label').textContent = '房间 ' + code;
   buildEmojiPicker();
   showPage('page-identity');
@@ -917,19 +1081,19 @@ function goBack() {
 }
 
 function enterIdentity() {
-  const nameInput = document.getElementById('name-input');
-  const name = nameInput.value.trim();
+  const name = document.getElementById('name-input').value.trim();
   if (!name) return;
-
-  state.self.name = name;
-  state.self.score = state.initScore;
-
-  // populate mock seats
-  const seats = ['top', 'left', 'right'];
-  seats.forEach((seat, i) => {
-    state.seats[seat] = { ...MOCK_PLAYERS[i], score: state.initScore };
-  });
-
+  const isHost = (entryMode === 'create');
+  state.players = [
+    { name, emoji: state.self.emoji, score: state.initScore, dbSeat: 'bottom',       isMe: true,  isHost },
+    { name: '阿福', emoji: '🐼', score: state.initScore, dbSeat: 'top',         isMe: false, isHost: false },
+    { name: '老虎', emoji: '🐯', score: state.initScore, dbSeat: 'left',        isMe: false, isHost: false },
+    { name: '小熊', emoji: '🐻', score: state.initScore, dbSeat: 'right',       isMe: false, isHost: false },
+    { name: '花花', emoji: '🌸', score: state.initScore, dbSeat: 'bench-left',  isMe: false, isHost: false },
+    { name: '星星', emoji: '⭐', score: state.initScore, dbSeat: 'bench-right', isMe: false, isHost: false },
+  ];
+  state.myDbSeat = 'bottom';
+  state.benchFollowDbSeat = 'bottom';
   setupMainPage();
   showPage('page-main');
 }
@@ -989,42 +1153,278 @@ function checkNameInput() {
 function setupMainPage() {
   document.getElementById('main-room-num').textContent = state.roomCode;
   renderMain();
-  setupDragDrop();
 }
 
 function renderMain() {
-  // Self
-  document.getElementById('av-self-emoji').textContent = state.self.emoji;
-  document.getElementById('name-self').textContent = state.self.name + '（我）';
-  document.getElementById('score-self').textContent = state.self.score;
+  const me = getMe();
+  if (!me) return;
+  const bench = isBenchViewer();
 
-  // Seats
-  const seats = ['top', 'left', 'right'];
-  seats.forEach(seat => {
-    const p = state.seats[seat];
-    const avEl = document.getElementById('av-' + seat);
-    const nameEl = document.getElementById('name-' + seat);
-    const ppEl = document.getElementById('pp-' + seat);
+  // ── Bottom position ──
+  const bottomP = bench ? getPlayerAtViewSeat('bottom') : me;
+  document.getElementById('crown-self').style.display = bottomP?.isHost ? 'block' : 'none';
+  document.getElementById('av-self-emoji').textContent = bottomP?.emoji ?? '';
+
+  if (bench) {
+    document.getElementById('name-self').textContent = bottomP?.name ?? '';
+    document.getElementById('score-self').textContent = '';
+    document.getElementById('av-self').style.border = '2px solid var(--brown)';
+    document.getElementById('av-self').style.cursor = 'pointer';
+  } else {
+    document.getElementById('name-self').textContent = me.name + '（我）';
+    document.getElementById('score-self').textContent = me.score;
+    document.getElementById('av-self').style.border = '2.5px solid var(--gold)';
+    document.getElementById('av-self').style.cursor = 'default';
+  }
+  document.getElementById('pp-bottom').dataset.dbseat = bench ? (bottomP?.dbSeat ?? '') : me.dbSeat;
+  document.getElementById('pp-bottom').style.bottom = bench ? '66px' : '2px';
+
+  // ── Table view positions ──
+  ['top', 'left', 'right'].forEach(vs => {
+    const p      = getPlayerAtViewSeat(vs);
+    const pp     = document.getElementById('pp-' + vs);
+    const av     = document.getElementById('av-' + vs);
+    const nm     = document.getElementById('name-' + vs);
+    const crown  = document.getElementById('crown-' + vs);
     if (p) {
-      avEl.textContent = p.emoji;
-      nameEl.textContent = p.name;
-      ppEl.style.display = 'flex';
+      av.childNodes.forEach(n => { if (n.nodeType === 3) n.remove(); });
+      av.insertAdjacentText('beforeend', p.emoji);
+      nm.textContent = p.name;
+      if (crown) crown.style.display = p.isHost ? 'block' : 'none';
+      av.style.opacity = ''; nm.style.display = '';
+      pp.style.display = 'flex'; pp.dataset.dbseat = p.dbSeat; av.dataset.dbseat = p.dbSeat;
     } else {
-      ppEl.style.display = 'none';
+      // Empty seat: show placeholder in swap mode (for second-tap target), hide otherwise
+      if (crown) crown.style.display = 'none';
+      if (state.swapMode && state.swapFirstDbSeat) {
+        // compute dbSeat for this view position so onclick works
+        const dbSeat = viewSeatToDbSeat(vs);
+        pp.style.display = 'flex';
+        pp.dataset.dbseat = dbSeat;
+        av.childNodes.forEach(n => { if (n.nodeType === 3) n.remove(); });
+        av.style.opacity = '0.35';
+        nm.style.display = 'none';
+      } else {
+        pp.style.display = 'none';
+      }
     }
   });
 
-  // Pool
+  // ── Bench positions ──
+  ['bench-left', 'bench-right'].forEach(bs => {
+    const suf   = bs === 'bench-left' ? 'L' : 'R';
+    const p     = state.players.find(pl => pl.dbSeat === bs);
+    const pp    = document.getElementById('pp-bench-' + suf);
+    const av    = document.getElementById('av-bench-' + suf);
+    const nm    = document.getElementById('name-bench-' + suf);
+    const sc    = document.getElementById('score-bench-' + suf);
+    const badge = document.getElementById('bench-badge-' + suf);
+    if (p) {
+      av.textContent = p.emoji;
+      nm.textContent = p.isMe ? p.name + '（我）' : p.name;
+      if (p.isMe) { sc.textContent = p.score; sc.style.display = 'block'; av.className = 'av-bench av-bench-self'; }
+      else         { sc.style.display = 'none';                              av.className = 'av-bench'; }
+      if (badge) badge.textContent = p.isHost ? '👑 备战席' : '备战席';
+      pp.style.display = 'flex'; pp.dataset.dbseat = bs; av.dataset.dbseat = bs;
+    } else {
+      pp.style.display = 'none';
+    }
+  });
+
+  // ── Pool ──
   document.getElementById('pool-num').textContent = state.pool;
+
+  // ── Bench follow bar ──
+  const followBar = document.getElementById('bench-follow-bar');
+  followBar.style.display = bench ? 'flex' : 'none';
+  if (bench) {
+    // Update button labels to show player names
+    TABLE_CW.forEach(dbSeat => {
+      const btn = followBar.querySelector(`[data-followseat="${dbSeat}"]`);
+      if (!btn) return;
+      const p = state.players.find(pl => pl.dbSeat === dbSeat);
+      btn.textContent = p ? p.emoji : '空';
+      btn.classList.toggle('active-follow', dbSeat === state.benchFollowDbSeat);
+    });
+  }
+
+  // ── Swap mode btn visibility ──
+  document.getElementById('swap-mode-btn').style.display = me?.isHost ? 'flex' : 'none';
+
+  // ── Refresh swap highlights if mode is active ──
+  if (state.swapMode) renderSwapMode();
 }
 
 // ═══════════════════════════════════════════════
-// PLAYER TAP → TRANSFER SHEET
+// SWAP MODE (HOST ONLY)
 // ═══════════════════════════════════════════════
-function handlePlayerTap(seat) {
-  const p = state.seats[seat];
-  if (!p) return;
-  state.transferTarget = seat;
+function toggleSwapMode() {
+  state.swapMode = !state.swapMode;
+  state.swapFirstDbSeat = null;
+  const btn = document.getElementById('swap-mode-btn');
+  btn.textContent = state.swapMode ? '取消换座' : '换 座';
+  btn.style.background = state.swapMode ? 'var(--brown)' : 'var(--gold)';
+  btn.style.color      = state.swapMode ? 'var(--gold)'  : 'var(--brown)';
+  // Clear all selection highlights
+  document.querySelectorAll('.swap-selectable,.swap-selected').forEach(el => {
+    el.classList.remove('swap-selectable','swap-selected');
+  });
+  document.getElementById('swap-mode-banner').style.display = state.swapMode ? 'flex' : 'none';
+  if (state.swapMode) renderSwapMode();
+}
+
+function renderSwapMode() {
+  document.getElementById('swap-banner-hint').textContent = state.swapFirstDbSeat
+    ? '已选中，再点另一位确认换座（可选空位）' : '点击任意玩家选择换座';
+  // Table positions: occupied = selectable always; empty = selectable only as second tap
+  ['top','left','right'].forEach(vs => {
+    const pp = document.getElementById('pp-' + vs);
+    if (!pp || pp.style.display === 'none') return;
+    const hasPlayer = !!state.players.find(pl => pl.dbSeat === pp.dataset.dbseat);
+    // first tap: only players; second tap: players + empty slots
+    if (hasPlayer || state.swapFirstDbSeat) {
+      pp.classList.add('swap-selectable');
+      pp.classList.toggle('swap-selected', !!pp.dataset.dbseat && pp.dataset.dbseat === state.swapFirstDbSeat);
+    }
+  });
+  const ppBot = document.getElementById('pp-bottom');
+  ppBot.classList.add('swap-selectable');
+  ppBot.classList.toggle('swap-selected', ppBot.dataset.dbseat === state.swapFirstDbSeat);
+  ['L','R'].forEach(s => {
+    const pp = document.getElementById('pp-bench-' + s);
+    if (pp && pp.dataset.dbseat) {
+      pp.classList.add('swap-selectable');
+      pp.classList.toggle('swap-selected', pp.dataset.dbseat === state.swapFirstDbSeat);
+    }
+  });
+}
+
+function handleSwapSelect(dbSeat) {
+  const p = state.players.find(pl => pl.dbSeat === dbSeat);
+  if (!state.swapFirstDbSeat) {
+    if (!p) return;
+    state.swapFirstDbSeat = dbSeat;
+    renderSwapMode();
+  } else if (state.swapFirstDbSeat === dbSeat) {
+    state.swapFirstDbSeat = null;
+    renderSwapMode();
+  } else {
+    const p1 = state.players.find(pl => pl.dbSeat === state.swapFirstDbSeat);
+    const p2 = p;
+    const n1 = p1 ? (p1.isMe ? p1.name+'（我）' : p1.name) : '？';
+    const n2 = p2 ? (p2.isMe ? p2.name+'（我）' : p2.name) : '空位';
+    document.getElementById('swap-av-self').textContent  = p1?.emoji ?? '·';
+    document.getElementById('swap-av-other').textContent = p2?.emoji ?? '·';
+    document.getElementById('swap-desc').textContent = `确认将「${n1}」和「${n2}」互换座位吗？`;
+    state.pendingSwap = { from: state.swapFirstDbSeat, to: dbSeat };
+    state.swapFirstDbSeat = null;
+    document.getElementById('swap-confirm').classList.add('open');
+  }
+}
+
+function cancelSwap() {
+  state.pendingSwap = null;
+  state.swapFirstDbSeat = null;
+  document.getElementById('swap-confirm').classList.remove('open');
+}
+
+function confirmSwap() {
+  if (!state.pendingSwap) return;
+  const { from, to } = state.pendingSwap;
+  const p1 = state.players.find(p => p.dbSeat === from);
+  const p2 = state.players.find(p => p.dbSeat === to);
+  if (p1 && p2) { p1.dbSeat = to; p2.dbSeat = from; }
+  else if (p1)  { p1.dbSeat = to; }
+  // Sync myDbSeat
+  state.myDbSeat = getMe().dbSeat;
+  // If bench follow target moved, follow it to its new seat
+  if (state.benchFollowDbSeat === from && isTableSeat(to))  state.benchFollowDbSeat = to;
+  else if (state.benchFollowDbSeat === to && isTableSeat(from)) state.benchFollowDbSeat = from;
+  if (!isTableSeat(state.benchFollowDbSeat)) state.benchFollowDbSeat = 'bottom';
+  state.pendingSwap = null;
+  state.swapMode = false;
+  // Reset swap button appearance
+  const btn = document.getElementById('swap-mode-btn');
+  btn.textContent = '换 座'; btn.style.background = 'var(--gold)'; btn.style.color = 'var(--brown)';
+  document.getElementById('swap-mode-banner').style.display = 'none';
+  document.querySelectorAll('.swap-selectable,.swap-selected').forEach(el => el.classList.remove('swap-selectable','swap-selected'));
+  document.getElementById('swap-confirm').classList.remove('open');
+  renderMain();
+  showToast('换座成功');
+}
+
+// ═══════════════════════════════════════════════
+// BENCH FOLLOW
+// ═══════════════════════════════════════════════
+function setBenchFollow(dbSeat) {
+  if (!isTableSeat(dbSeat)) return;
+  state.benchFollowDbSeat = dbSeat;
+  // Update follow bar
+  document.querySelectorAll('.follow-btn').forEach(btn => {
+    const p = state.players.find(pl => pl.dbSeat === btn.dataset.followseat);
+    btn.textContent = p?.emoji ?? '·';
+    btn.classList.toggle('active-follow', btn.dataset.followseat === dbSeat);
+  });
+  renderMain();
+}
+
+// ═══════════════════════════════════════════════
+// DEMO VIEW SWITCHER (PROTOTYPE ONLY)
+// ═══════════════════════════════════════════════
+function toggleViewSwitcher() {
+  const el = document.getElementById('view-switcher');
+  if (el.style.display === 'none') {
+    // Rebuild list
+    const list = document.getElementById('demo-player-list');
+    list.innerHTML = '';
+    state.players.forEach(p => {
+      const btn = document.createElement('div');
+      btn.className = 'demo-player-btn' + (p.isMe ? ' demo-me' : '');
+      btn.onclick = () => switchDemoView(p.dbSeat);
+      const isBench = BENCH_SEATS.includes(p.dbSeat);
+      btn.innerHTML = `<span class="demo-av-ico">${p.emoji}</span>`
+        + `<span class="demo-pname">${p.name}${p.isMe ? '（我）' : ''}</span>`
+        + (isBench    ? `<span class="demo-bench-tag">备战</span>` : '')
+        + (p.isHost   ? `<span class="demo-host-tag">房主</span>` : '');
+      list.appendChild(btn);
+    });
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function switchDemoView(dbSeat) {
+  const cur = getMe(); if (cur) cur.isMe = false;
+  const next = state.players.find(p => p.dbSeat === dbSeat);
+  if (!next) { if (cur) cur.isMe = true; return; }
+  next.isMe = true;
+  state.myDbSeat = dbSeat;
+  if (BENCH_SEATS.includes(dbSeat)) {
+    const avail = TABLE_CW.find(s => state.players.some(p => p.dbSeat === s));
+    state.benchFollowDbSeat = avail || 'bottom';
+  }
+  document.getElementById('view-switcher').style.display = 'none';
+  // Reset swap mode if switching view
+  if (state.swapMode) toggleSwapMode();
+  renderMain();
+  showToast('视角：' + next.name);
+}
+
+// ═══════════════════════════════════════════════
+// PLAYER TAP → TRANSFER or SWAP
+// ═══════════════════════════════════════════════
+function handlePlayerTap(viewSeat) {
+  const dbSeat = viewSeatToDbSeat(viewSeat);
+  if (!dbSeat) return;
+  if (state.swapMode) {
+    if (!getMe()?.isHost) return;
+    handleSwapSelect(dbSeat);
+    return;
+  }
+  const p = state.players.find(pl => pl.dbSeat === dbSeat);
+  if (!p || p.isMe) return;
+  state.transferTarget = dbSeat;
   document.getElementById('transfer-rec-av').textContent = p.emoji;
   document.getElementById('transfer-rec-name').textContent = p.name;
   document.getElementById('transfer-amount').value = '';
@@ -1034,7 +1434,7 @@ function handlePlayerTap(seat) {
 
 function updateTransferHint() {
   const amt = parseInt(document.getElementById('transfer-amount').value) || 0;
-  const target = state.seats[state.transferTarget];
+  const target = state.players.find(p => p.dbSeat === state.transferTarget);
   if (!target) return;
   document.getElementById('transfer-dir-hint').textContent =
     amt > 0 ? `你将付出 ${amt} 分给 ${target.name}` : `你将付出多少分给 ${target.name}？`;
@@ -1043,12 +1443,12 @@ function updateTransferHint() {
 function confirmTransfer() {
   const amt = parseInt(document.getElementById('transfer-amount').value);
   if (!amt || amt <= 0) { showToast('请输入有效分数'); return; }
-  const target = state.seats[state.transferTarget];
+  const me = getMe();
+  const target = state.players.find(p => p.dbSeat === state.transferTarget);
   if (!target) return;
-
-  state.self.score -= amt;
+  me.score -= amt;
   state.gameStarted = true;
-  addHistory({ desc: `${state.self.name} → ${target.name}`, amt, selfDelta: -amt, type: 'transfer' });
+  addHistory({ desc: `${me.name} → ${target.name}`, amt, selfDelta: -amt, type: 'transfer' });
   closeSheet('transfer');
   renderMain();
   showToast('转账成功');
@@ -1059,29 +1459,37 @@ function confirmTransfer() {
 // ═══════════════════════════════════════════════
 function openPoolSheet() {
   document.getElementById('pool-sheet-num').textContent = state.pool;
-  document.getElementById('pool-collect-amt').textContent = state.pool;
   const collectBtn = document.getElementById('pool-collect-btn');
-  if (state.pool <= 0) {
+  const bench = isBenchViewer();
+  if (bench) {
     collectBtn.className = 'pool-btn pool-btn-disabled';
     collectBtn.disabled = true;
+    collectBtn.textContent = '备战席不可收公池';
+  } else if (state.pool <= 0) {
+    collectBtn.className = 'pool-btn pool-btn-disabled';
+    collectBtn.disabled = true;
+    collectBtn.innerHTML = '收公池（+<span id="pool-collect-amt">0</span>分）';
   } else {
     collectBtn.className = 'pool-btn pool-btn-collect';
     collectBtn.disabled = false;
+    collectBtn.innerHTML = `收公池（+<span id="pool-collect-amt">${state.pool}</span>分）`;
   }
 }
 
 function poolAction(action) {
+  const me = getMe();
   if (action === 'pay') {
-    state.self.score -= 1;
+    me.score -= 1;
     state.pool += 1;
-    addHistory({ desc: `${state.self.name} 交公池`, amt: 1, selfDelta: -1, type: 'pool-pay' });
+    addHistory({ desc: `${me.name} 交公池`, amt: 1, selfDelta: -1, type: 'pool-pay' });
     showToast('已交1分到公池');
   } else if (action === 'collect') {
+    if (isBenchViewer()) { showToast('备战席玩家不可收公池'); return; }
     if (state.pool <= 0) return;
     const amt = state.pool;
-    state.self.score += amt;
+    me.score += amt;
     state.pool = 0;
-    addHistory({ desc: `${state.self.name} 收公池`, amt, selfDelta: +amt, type: 'pool-collect' });
+    addHistory({ desc: `${me.name} 收公池`, amt, selfDelta: +amt, type: 'pool-collect' });
     showToast(`收到公池 ${amt} 分`);
   }
   state.gameStarted = true;
@@ -1093,10 +1501,7 @@ function poolAction(action) {
 // HISTORY
 // ═══════════════════════════════════════════════
 let histId = 0;
-function addHistory(entry) {
-  entry.id = ++histId;
-  state.history.unshift(entry);
-}
+function addHistory(entry) { entry.id = ++histId; state.history.unshift(entry); }
 
 function openHistorySheet() {
   const list = document.getElementById('hist-list');
@@ -1151,7 +1556,8 @@ function doRevoke(id) {
   item.revoked = true;
 
   // Reverse scores
-  state.self.score -= item.selfDelta;
+  const me = getMe();
+  if (me) me.score -= item.selfDelta;
   if (item.type === 'pool-pay') state.pool -= 1;
   if (item.type === 'pool-collect') state.pool += item.amt;
 
@@ -1178,8 +1584,8 @@ function updateInitScore() {
 
 function openSettingsSheet() {
   const hostEl = document.getElementById('host-settings');
-  hostEl.style.display = state.isHost ? 'block' : 'none';
-  if (state.isHost) {
+  hostEl.style.display = getMe()?.isHost ? 'block' : 'none';
+  if (getMe()?.isHost) {
     document.getElementById('setting-init-score').value = state.initScore;
     buildKickList();
   }
@@ -1187,34 +1593,22 @@ function openSettingsSheet() {
 }
 
 function confirmLeave() {
-  const others = ['top','left','right'].filter(s => state.seats[s]);
+  const me = getMe();
+  const others = state.players.filter(p => !p.isMe);
   let msg;
-  if (state.isHost && others.length === 0) {
-    msg = '你是唯一的玩家，退出后房间将自动解散。确认退出吗？';
-  } else if (state.isHost) {
-    const nextHost = state.seats[others[0]];
-    msg = `你是房主，退出后「${nextHost.name}」将成为新房主。确认退出吗？`;
-  } else {
-    msg = '确认退出房间吗？退出后可重新输入房间号加入。';
-  }
+  if (me.isHost && others.length === 0) msg = '你是唯一的玩家，退出后房间将自动解散。确认退出吗？';
+  else if (me.isHost) msg = `你是房主，退出后「${others[0].name}」将成为新房主。确认退出吗？`;
+  else msg = '确认退出当前房间吗？';
   state.pendingConfirm = { title: '退出房间', msg, action: doLeave };
   openConfirm();
 }
 
 function doLeave() {
-  const others = ['top','left','right'].filter(s => state.seats[s]);
-  if (state.isHost && others.length === 0) {
-    doDissolve(); return;
-  }
-  if (state.isHost) {
-    showToast(`${state.seats[others[0]].name} 成为新房主`);
-  }
-  Object.assign(state, {
-    roomCode: '', initScore: 200, gameStarted: false, pool: 0,
-    seats: { top: null, left: null, right: null },
-    self: { name: '', emoji: '🍡', score: 0 },
-    isHost: true, history: [],
-  });
+  const me = getMe();
+  const others = state.players.filter(p => !p.isMe);
+  if (me.isHost && others.length === 0) { doDissolve(); return; }
+  if (me.isHost && others.length > 0) { others[0].isHost = true; showToast(`${others[0].name} 成为新房主`); }
+  _resetState();
   closeSheet('settings');
   resetEntry();
   showPage('page-entry');
@@ -1223,38 +1617,36 @@ function doLeave() {
 function buildKickList() {
   const list = document.getElementById('kick-list');
   list.innerHTML = '';
-  const seats = ['top', 'left', 'right'];
-  const occupied = seats.filter(s => state.seats[s]);
-  if (occupied.length === 0) {
+  const others = state.players.filter(p => !p.isMe);
+  if (others.length === 0) {
     list.innerHTML = '<div style="font-size:13px;color:var(--text-light);padding:6px 0;">暂无其他玩家</div>';
     return;
   }
-  occupied.forEach(seat => {
-    const p = state.seats[seat];
+  others.forEach(p => {
     const row = document.createElement('div');
     row.className = 'kick-item';
     row.innerHTML = `
       <div class="kick-av">${p.emoji}</div>
       <div class="kick-name">${p.name}</div>
-      <button class="kick-btn" onclick="confirmKick('${seat}')">踢出</button>
+      <button class="kick-btn" onclick="confirmKick('${p.dbSeat}')">踢出</button>
     `;
     list.appendChild(row);
   });
 }
 
-function confirmKick(seat) {
-  const p = state.seats[seat];
+function confirmKick(dbSeat) {
+  const p = state.players.find(pl => pl.dbSeat === dbSeat);
   if (!p) return;
   state.pendingConfirm = {
     title: '踢出玩家',
     msg: `确认将「${p.name}」踢出房间吗？`,
-    action: () => doKick(seat),
+    action: () => doKick(dbSeat),
   };
   openConfirm();
 }
 
-function doKick(seat) {
-  state.seats[seat] = null;
+function doKick(dbSeat) {
+  state.players = state.players.filter(p => p.dbSeat !== dbSeat);
   closeSheet('settings');
   renderMain();
   showToast('已踢出玩家');
@@ -1270,10 +1662,7 @@ function confirmReset() {
 }
 
 function doReset() {
-  state.self.score = state.initScore;
-  ['top', 'left', 'right'].forEach(seat => {
-    if (state.seats[seat]) state.seats[seat].score = state.initScore;
-  });
+  state.players.forEach(p => { p.score = state.initScore; });
   state.pool = 0;
   state.history = [];
   state.gameStarted = false;
@@ -1292,190 +1681,21 @@ function confirmDissolve() {
 }
 
 function doDissolve() {
-  // Return to entry page and reset all state
-  Object.assign(state, {
-    roomCode: '', initScore: 200, gameStarted: false, pool: 0,
-    seats: { top: null, left: null, right: null },
-    self: { name: '', emoji: '🍡', score: 0 },
-    history: [],
-  });
+  _resetState();
   closeSheet('settings');
   showPage('page-entry');
   showToast('房间已解散');
 }
 
-// ═══════════════════════════════════════════════
-// DRAG & DROP — SEAT SWAP (touch only)
-//   tap (<300ms, <8px move)  → transfer sheet
-//   long-press 300ms + drag  → seat swap
-//   self avatar NOT draggable
-// ═══════════════════════════════════════════════
-let _touch = null;     // { seat, startX, startY, dragging, timer }
-let _dragFrom = null;  // seat key of avatar being dragged
-let _dragGhost = null;
-let _dragOver = null;
-
-function setupDragDrop() {
-  ['top', 'left', 'right'].forEach(seat => {
-    const av = document.getElementById('av-' + seat);
-    av.addEventListener('touchstart',  e => _onTouchStart(e, seat),  { passive: false });
-    av.addEventListener('touchmove',   e => _onTouchMove(e),          { passive: false });
-    av.addEventListener('touchend',    e => _onTouchEnd(e, seat));
-    av.addEventListener('touchcancel', e => _cancelDrag());
+function _resetState() {
+  Object.assign(state, {
+    roomCode: '', initScore: 200, gameStarted: false, pool: 0,
+    players: [], myDbSeat: 'bottom', benchFollowDbSeat: 'bottom',
+    swapMode: false, swapFirstDbSeat: null,
+    self: { name: '', emoji: '🍡' },
+    history: [], transferTarget: null, pendingConfirm: null, pendingSwap: null,
   });
-}
-
-function _onTouchStart(e, seat) {
-  if (!state.seats[seat]) return;
-  e.preventDefault(); // prevents synthesized click — we call handlePlayerTap manually
-
-  const t = e.touches[0];
-  _touch = {
-    seat, startX: t.clientX, startY: t.clientY, dragging: false,
-    timer: setTimeout(() => {
-      if (!_touch || _touch.seat !== seat) return;
-      _touch.dragging = true;
-      _dragFrom = seat;
-      _spawnGhost(seat, t.clientX, t.clientY);
-    }, 300),
-  };
-}
-
-function _onTouchMove(e) {
-  if (!_touch) return;
-  const t = e.touches[0];
-
-  if (_touch.dragging) {
-    e.preventDefault();
-    _moveGhost(t.clientX, t.clientY);
-    _detectOver(t.clientX, t.clientY);
-  } else {
-    const dx = t.clientX - _touch.startX;
-    const dy = t.clientY - _touch.startY;
-    if (Math.sqrt(dx * dx + dy * dy) > 8) {
-      // Too much movement before long-press — cancel
-      clearTimeout(_touch.timer);
-      _touch = null;
-    }
-  }
-}
-
-function _onTouchEnd(e, seat) {
-  if (!_touch || _touch.seat !== seat) return;
-  clearTimeout(_touch.timer);
-  const wasDragging = _touch.dragging;
-  _touch = null;
-
-  if (!wasDragging) {
-    handlePlayerTap(seat); // tap → transfer
-  } else {
-    _finishDrag();
-  }
-}
-
-function _cancelDrag() {
-  if (_touch) { clearTimeout(_touch.timer); _touch = null; }
-  _cleanupDrag();
-  _dragFrom = null;
-}
-
-// ── Ghost ──
-function _spawnGhost(seat, cx, cy) {
-  _dragGhost = document.createElement('div');
-  _dragGhost.className = 'drag-ghost';
-  _dragGhost.textContent = state.seats[seat].emoji;
-  document.getElementById('app').appendChild(_dragGhost);
-  _moveGhost(cx, cy);
-  document.getElementById('av-' + seat).style.opacity = '0.35';
-}
-
-function _moveGhost(cx, cy) {
-  if (!_dragGhost) return;
-  const r = document.getElementById('app').getBoundingClientRect();
-  _dragGhost.style.left = (cx - r.left) + 'px';
-  _dragGhost.style.top  = (cy - r.top)  + 'px';
-}
-
-function _detectOver(cx, cy) {
-  let over = null;
-
-  // Check self bottom position
-  const sr = document.getElementById('pp-bottom').getBoundingClientRect();
-  if (cx >= sr.left && cx <= sr.right && cy >= sr.top && cy <= sr.bottom) over = 'self';
-
-  // Check other seats (not the one being dragged)
-  if (!over) {
-    ['top', 'left', 'right'].forEach(s => {
-      if (s === _dragFrom || !state.seats[s]) return;
-      const r = document.getElementById('pp-' + s).getBoundingClientRect();
-      if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) over = s;
-    });
-  }
-
-  _dragOver = over;
-  ['top', 'left', 'right', 'bottom'].forEach(s => {
-    document.getElementById('pp-' + s)?.classList.toggle('drag-over', s === over);
-  });
-}
-
-function _cleanupDrag() {
-  if (_dragGhost) { _dragGhost.remove(); _dragGhost = null; }
-  ['top', 'left', 'right', 'bottom'].forEach(s => {
-    document.getElementById('pp-' + s)?.classList.remove('drag-over');
-    const av = document.getElementById('av-' + s);
-    if (av) av.style.opacity = '';
-  });
-}
-
-function _finishDrag() {
-  const from   = _dragFrom;
-  const target = _dragOver;
-  _cleanupDrag();
-  _dragFrom = null;
-  _dragOver = null;
-
-  if (!from || !target || target === from) return;
-
-  const fromPlayer = state.seats[from];
-  const toIsSelf   = target === 'self';
-  const toPlayer   = toIsSelf ? state.self : state.seats[target];
-  if (!fromPlayer) return;
-
-  document.getElementById('swap-av-self').textContent  = fromPlayer.emoji;
-  document.getElementById('swap-av-other').textContent = toPlayer?.emoji ?? '?';
-  document.getElementById('swap-desc').textContent =
-    `确认将「${fromPlayer.name}」和「${toIsSelf ? state.self.name : (toPlayer?.name ?? '空位')}」互换座位吗？`;
-  state.pendingSwap = { from, to: target };
-  document.getElementById('swap-confirm').classList.add('open');
-}
-
-function cancelSwap() {
-  state.pendingSwap = null;
-  document.getElementById('swap-confirm').classList.remove('open');
-}
-
-function confirmSwap() {
-  if (!state.pendingSwap) return;
-  const { from, to } = state.pendingSwap;
-
-  if (to === 'self') {
-    // swap from-seat player with self
-    const tmp = { ...state.self };
-    state.self.name = state.seats[from].name;
-    state.self.emoji = state.seats[from].emoji;
-    // Keep scores, only swap identity/display
-    state.seats[from] = { name: tmp.name, emoji: tmp.emoji, score: state.seats[from].score };
-  } else {
-    // swap two non-self seats
-    const tmp = state.seats[from];
-    state.seats[from] = state.seats[to];
-    state.seats[to] = tmp;
-  }
-
-  state.pendingSwap = null;
-  document.getElementById('swap-confirm').classList.remove('open');
-  renderMain();
-  showToast('换座成功');
+  resetEntry();
 }
 
 // ═══════════════════════════════════════════════

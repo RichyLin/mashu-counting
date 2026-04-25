@@ -30,7 +30,7 @@ create table if not exists players (
   name         varchar(6)  not null,
   emoji        text        not null default '🍡',
   seat         text        not null
-               check (seat in ('top', 'left', 'right', 'bottom')),
+               check (seat in ('top', 'left', 'right', 'bottom', 'bench-left', 'bench-right')),
   score        integer     not null default 200,
   is_online    boolean     not null default true,
   last_seen_at timestamptz not null default now(),

@@ -19,7 +19,8 @@ export default function PoolSheet({ open, onClose, toast }) {
     onClose()
   }
 
-  const canCollect = pool.score > 0
+  const isBench   = ['bench-left', 'bench-right'].includes(myPlayer?.seat)
+  const canCollect = !isBench && pool.score > 0
 
   return (
     <div className={`sheet-overlay${open ? ' open' : ''}`}>
@@ -42,7 +43,7 @@ export default function PoolSheet({ open, onClose, toast }) {
           </button>
           <button onClick={handleCollect} disabled={!canCollect}
             style={{ width: '100%', padding: 18, borderRadius: 16, fontSize: 18, letterSpacing: '0.1em', cursor: canCollect ? 'pointer' : 'not-allowed', border: canCollect ? '2px solid var(--brown)' : '2px solid var(--gray-dis)', background: canCollect ? 'linear-gradient(160deg, var(--gold) 0%, var(--gold-d) 100%)' : 'var(--gray-dis)', color: canCollect ? 'var(--brown)' : 'rgba(74,55,40,0.35)', boxShadow: canCollect ? '0 2px 0 var(--brown)' : 'none' }}>
-            收公池（+{pool.score}分）
+            {isBench ? '备战席不可收公池' : `收公池（+${pool.score}分）`}
           </button>
         </div>
       </div>

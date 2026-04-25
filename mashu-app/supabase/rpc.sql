@@ -50,7 +50,13 @@ create or replace function perform_pool_collect(
 declare
   v_id         uuid;
   v_pool_score integer;
+  v_seat       text;
 begin
+  select seat into v_seat from players where id = p_player_id;
+  if v_seat in ('bench-left', 'bench-right') then
+    raise exception '备战席玩家不可收公池';
+  end if;
+
   select score into v_pool_score from room_pool where room_id = p_room_id;
   if v_pool_score is null or v_pool_score <= 0 then
     raise exception '公池为空';

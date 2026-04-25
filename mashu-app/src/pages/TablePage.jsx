@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useRoom, getViewPos } from '../context/RoomContext'
@@ -9,191 +9,116 @@ import PoolSheet from '../components/sheets/PoolSheet'
 import HistorySheet from '../components/sheets/HistorySheet'
 import SettingsSheet from '../components/sheets/SettingsSheet'
 
-// ── 座位样式 ─────────────────────────────────────────────────
+const TABLE_SEATS = ['bottom', 'top', 'left', 'right']
+const BENCH_SEATS = ['bench-left', 'bench-right']
+const CW = ['bottom', 'right', 'top', 'left']
+
 const POS_STYLE = {
   top:    { position: 'absolute', top: 14,   left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, zIndex: 5 },
-  left:   { position: 'absolute', left: 8,   top:  '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, zIndex: 5 },
-  right:  { position: 'absolute', right: 8,  top:  '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, zIndex: 5 },
+  left:   { position: 'absolute', left: 8,   top: '50%',  transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, zIndex: 5 },
+  right:  { position: 'absolute', right: 8,  top: '50%',  transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, zIndex: 5 },
   bottom: { position: 'absolute', bottom: 2, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, zIndex: 5 },
+  'bench-left':  { position: 'absolute', top: 10, left: 10,  zIndex: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 },
+  'bench-right': { position: 'absolute', top: 10, right: 10, zIndex: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 },
 }
 
-// ── 换座拖拽 ─────────────────────────────────────────────────
-function useDragSwap({ players, myPlayer, getViewPos: gvp, onSwapRequest }) {
-  const touchRef = useRef(null)
-  const ghostRef = useRef(null)
-  const dragFromRef = useRef(null)
-  const dragOverRef = useRef(null)
-  const [dragOver, setDragOver] = useState(null)
-
-  const spawnGhost = useCallback((emoji, cx, cy, appEl) => {
-    const g = document.createElement('div')
-    g.style.cssText = `position:absolute;width:56px;height:56px;border-radius:50%;background:var(--matcha-l);border:2px solid var(--matcha-d);display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 8px 24px rgba(74,55,40,0.3);pointer-events:none;z-index:9998;opacity:0.85;transform:translate(-50%,-50%) scale(1.1);transition:opacity 0.1s;`
-    g.textContent = emoji
-    appEl.appendChild(g)
-    const r = appEl.getBoundingClientRect()
-    g.style.left = (cx - r.left) + 'px'
-    g.style.top  = (cy - r.top)  + 'px'
-    ghostRef.current = g
-  }, [])
-
-  const moveGhost = useCallback((cx, cy, appEl) => {
-    if (!ghostRef.current) return
-    const r = appEl.getBoundingClientRect()
-    ghostRef.current.style.left = (cx - r.left) + 'px'
-    ghostRef.current.style.top  = (cy - r.top)  + 'px'
-  }, [])
-
-  const cleanup = useCallback(() => {
-    ghostRef.current?.remove(); ghostRef.current = null
-    setDragOver(null); dragOverRef.current = null
-    document.querySelectorAll('[data-seat]').forEach(el => el.style.opacity = '')
-  }, [])
-
-  const detectOver = useCallback((cx, cy) => {
-    let over = null
-    document.querySelectorAll('[data-seat]').forEach(el => {
-      const r = el.getBoundingClientRect()
-      if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) {
-        const s = el.dataset.seat
-        if (s !== dragFromRef.current) over = s
-      }
-    })
-    dragOverRef.current = over
-    setDragOver(over)
-  }, [])
-
-  function bindAvatar(viewPos, player) {
-    if (!player) return {}
-    return {
-      onTouchStart(e) {
-        e.preventDefault()
-        const t = e.touches[0]
-        const appEl = e.currentTarget.closest('.app-shell')
-        const avatarEl = e.currentTarget
-
-        touchRef.current = {
-          seat: viewPos, startX: t.clientX, startY: t.clientY, dragging: false,
-          timer: setTimeout(() => {
-            if (!touchRef.current || touchRef.current.seat !== viewPos) return
-            touchRef.current.dragging = true
-            dragFromRef.current = viewPos
-            spawnGhost(player.emoji, t.clientX, t.clientY, appEl)
-            avatarEl.style.opacity = '0.35'
-          }, 300),
-        }
-      },
-      onTouchMove(e) {
-        if (!touchRef.current) return
-        const t = e.touches[0]
-        if (touchRef.current.dragging) {
-          e.preventDefault()
-          moveGhost(t.clientX, t.clientY, e.currentTarget.closest('.app-shell'))
-          detectOver(t.clientX, t.clientY)
-        } else {
-          const dx = t.clientX - touchRef.current.startX
-          const dy = t.clientY - touchRef.current.startY
-          if (Math.sqrt(dx*dx + dy*dy) > 8) {
-            clearTimeout(touchRef.current.timer); touchRef.current = null
-          }
-        }
-      },
-      onTouchEnd(e) {
-        if (!touchRef.current || touchRef.current.seat !== viewPos) return
-        clearTimeout(touchRef.current.timer)
-        const wasDragging = touchRef.current.dragging
-        touchRef.current = null
-        if (wasDragging) {
-          const target = dragOverRef.current
-          const from   = dragFromRef.current
-          cleanup()
-          if (from && target && target !== from) onSwapRequest(from, target)
-        }
-        // tap → handled by onClick
-      },
-    }
-  }
-
-  return { bindAvatar, dragOver, cleanup }
-}
-
-// ── TablePage ────────────────────────────────────────────────
 export default function TablePage() {
   const { room, myPlayer, players, pool, loading, error } = useRoom()
   const nav = useNavigate()
   const { toastMsg, toastShow, toast } = useToast()
 
-  const [sheet, setSheet] = useState(null)   // 'transfer' | 'pool' | 'history' | 'settings'
+  const [sheet, setSheet] = useState(null)
   const [transferTarget, setTransferTarget] = useState(null)
-  const [swapReq, setSwapReq] = useState(null) // { from, to }
+  const [benchFollowSeat, setBenchFollowSeat] = useState('bottom')
+  const [swapMode, setSwapMode] = useState(false)
+  const [swapFirst, setSwapFirst] = useState(null)   // player id
+  const [swapReq, setSwapReq]   = useState(null)     // { pFrom, pTo }
 
-  const isHost = room?.host_device_id === myPlayer?.device_id
+  const isHost  = room?.host_device_id === myPlayer?.device_id
+  const isBench = BENCH_SEATS.includes(myPlayer?.seat)
+  const effectiveSeat = isBench ? benchFollowSeat : (myPlayer?.seat ?? 'bottom')
 
-  // 被踢出时跳回首页（用 ref 避免初始化时误判）
+  const tablePlayers = players.filter(p => TABLE_SEATS.includes(p.seat))
+  const benchPlayers = players.filter(p => BENCH_SEATS.includes(p.seat))
+
+  // 被踢出时跳回首页
   const confirmedInRoom = useRef(false)
   useEffect(() => {
     if (loading || !myPlayer) return
     const stillIn = players.some(p => p.id === myPlayer.id)
     if (stillIn) { confirmedInRoom.current = true; return }
-    if (confirmedInRoom.current) {
-      clearStoredPlayer(room?.code)
-      nav('/')
-    }
+    if (confirmedInRoom.current) { clearStoredPlayer(room?.code); nav('/') }
   }, [players, myPlayer, loading, room, nav])
 
-  // 视图旋转：其他玩家的 DB seat → 相对于我的显示位置
-  const mySeat = myPlayer?.seat ?? 'bottom'
+  // ── View helpers ──────────────────────────────────────────
   function playerAt(viewPos) {
-    return players.find(p => p.id !== myPlayer?.id && getViewPos(p.seat, mySeat) === viewPos) ?? null
+    return tablePlayers.find(p => {
+      if (!isBench && p.id === myPlayer?.id) return false
+      return getViewPos(p.seat, effectiveSeat) === viewPos
+    }) ?? null
   }
 
-  const topPlayer   = playerAt('top')
-  const leftPlayer  = playerAt('left')
-  const rightPlayer = playerAt('right')
+  function bottomDisplayPlayer() {
+    if (!isBench) return myPlayer
+    return tablePlayers.find(p => p.seat === benchFollowSeat) ?? null
+  }
 
+  function isHostPlayer(player) {
+    return player && room?.host_device_id === player.device_id
+  }
+
+  // 视图位置 → DB 座位（换座空位时需要知道目标 DB seat）
+  function viewPosToDbSeat(viewPos) {
+    return CW[(CW.indexOf(viewPos) + CW.indexOf(effectiveSeat)) % 4]
+  }
+
+  // ── Actions ───────────────────────────────────────────────
   function openTransfer(player) {
+    if (!player || player.id === myPlayer?.id) return
     setTransferTarget(player)
     setSheet('transfer')
   }
 
-  // 换座确认
-  function handleSwapRequest(fromView, toView) {
-    setSwapReq({ from: fromView, to: toView })
+  function toggleSwapMode() {
+    setSwapMode(v => !v)
+    setSwapFirst(null)
+  }
+
+  function handleSwapSelect(player) {
+    if (!player) return
+    if (!swapFirst) {
+      setSwapFirst(player.id)
+    } else if (swapFirst === player.id) {
+      setSwapFirst(null)
+    } else {
+      const pFrom = players.find(p => p.id === swapFirst)
+      setSwapFirst(null)
+      setSwapReq({ pFrom, pTo: player })
+    }
+  }
+
+  function handleAvatarClick(player) {
+    if (swapMode && isHost) handleSwapSelect(player)
+    else openTransfer(player)
   }
 
   async function confirmSwap() {
     if (!swapReq) return
-    const { from, to } = swapReq
-
-    function playerAtView(v) {
-      if (v === 'bottom') return myPlayer
-      return playerAt(v)
-    }
-    const pFrom = playerAtView(from)
-    const pTo   = playerAtView(to)
-    if (!pFrom) { setSwapReq(null); return }
-
-    if (pTo) {
-      // 两个座位都有人 → 互换 DB seat
+    const { pFrom, pTo } = swapReq
+    if (pTo.isEmpty) {
+      await supabase.from('players').update({ seat: pTo.seat }).eq('id', pFrom.id)
+    } else {
       await Promise.all([
         supabase.from('players').update({ seat: pTo.seat }).eq('id', pFrom.id),
         supabase.from('players').update({ seat: pFrom.seat }).eq('id', pTo.id),
       ])
-    } else {
-      // 目标座位为空 → 只移动 pFrom 到目标 DB seat
-      const CW = ['bottom', 'right', 'top', 'left']
-      const targetDbSeat = CW[(CW.indexOf(to) + CW.indexOf(mySeat)) % 4]
-      await supabase.from('players').update({ seat: targetDbSeat }).eq('id', pFrom.id)
     }
     setSwapReq(null)
+    setSwapMode(false)
     toast('换座成功')
   }
 
-  const { bindAvatar, dragOver } = useDragSwap({
-    players, myPlayer,
-    getViewPos, // just passing through for reference
-    onSwapRequest: handleSwapRequest,
-  })
-
+  // ── Loading / error ───────────────────────────────────────
   if (loading) return (
     <div className="app-shell">
       <div className="spin-wrap"><div className="spinner" /></div>
@@ -208,49 +133,146 @@ export default function TablePage() {
   )
 
   const onlineCount = players.filter(p => p.is_online).length
+  const topP    = playerAt('top')
+  const leftP   = playerAt('left')
+  const rightP  = playerAt('right')
+  const bottomP = bottomDisplayPlayer()
 
-  // ─── avatar 渲染 helper
-  function renderOtherAvatar(viewPos, player) {
-    const isOver = dragOver === viewPos
-    if (!player) {
-      // 空位：渲染占位元素供拖拽检测
-      return (
-        <div style={POS_STYLE[viewPos]} data-seat={viewPos}>
-          <div
-            data-seat={viewPos}
-            style={{ width: 56, height: 56, borderRadius: '50%', border: `2px dashed ${isOver ? 'var(--gold)' : 'rgba(74,55,40,0.18)'}`, background: isOver ? 'rgba(240,200,74,0.12)' : 'transparent', transition: 'all 0.15s' }}
-          />
-        </div>
-      )
-    }
+  // ── Render helpers ────────────────────────────────────────
+  const swapSelected = id => swapMode && swapFirst && id === swapFirst
+
+  function TableAvatar({ player, size = 62 }) {
+    const sel = swapSelected(player?.id)
     return (
-      <div style={POS_STYLE[viewPos]} data-seat={viewPos}>
-        <div
-          data-seat={viewPos}
-          onClick={() => openTransfer(player)}
-          {...bindAvatar(viewPos, player)}
-          onContextMenu={e => e.preventDefault()}
-          style={{ width: 56, height: 56, borderRadius: '50%', border: `2px solid ${isOver ? 'var(--gold)' : 'var(--brown)'}`, background: 'var(--mochi)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, boxShadow: isOver ? '0 0 0 3px rgba(240,200,74,0.4), 0 4px 10px rgba(74,55,40,0.2)' : '0 4px 10px rgba(74,55,40,0.2)', cursor: 'pointer', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none', transition: 'transform 0.15s', touchAction: 'none' }}
-        >
-          {player.emoji}
-        </div>
-        <div style={{ background: '#fff', border: '1.5px solid var(--brown)', borderRadius: 20, padding: '3px 10px', fontSize: 11, color: 'var(--brown)', whiteSpace: 'nowrap', boxShadow: '0 2px 6px var(--shadow)' }}>
-          {player.name}
-        </div>
+      <div style={{
+        width: size, height: size, borderRadius: '50%',
+        border: sel ? '3px solid var(--gold)' : '2px solid var(--brown)',
+        outline: swapMode ? `2px dashed rgba(240,200,74,${sel ? 0.7 : 0.45})` : 'none',
+        outlineOffset: 3,
+        background: 'var(--mochi)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: Math.round(size * 0.45),
+        boxShadow: sel
+          ? '0 0 0 4px rgba(240,200,74,0.3), 0 4px 10px rgba(74,55,40,0.2)'
+          : '0 4px 10px rgba(74,55,40,0.2)',
+        position: 'relative', cursor: 'pointer', transition: 'all 0.15s',
+      }}>
+        {isHostPlayer(player) && (
+          <span style={{ position: 'absolute', top: -19, left: '50%', transform: 'translateX(-50%)', fontSize: 15 }}>👑</span>
+        )}
+        {player?.emoji}
       </div>
     )
   }
 
+  const NameTag = ({ children }) => (
+    <div style={{ background: '#fff', border: '1.5px solid var(--brown)', borderRadius: 20, padding: '3px 10px', fontSize: 11, color: 'var(--brown)', whiteSpace: 'nowrap', boxShadow: '0 2px 6px var(--shadow)' }}>
+      {children}
+    </div>
+  )
+
+  function renderTablePos(viewPos, player) {
+    if (!player) {
+      // 空位：swap 模式且已选第一个玩家时，显示可点击的目标
+      if (swapMode && swapFirst) {
+        const dbSeat = viewPosToDbSeat(viewPos)
+        const emptySlot = { id: `empty-${dbSeat}`, seat: dbSeat, name: '空位', emoji: '', isEmpty: true }
+        return (
+          <div key={viewPos} style={POS_STYLE[viewPos]} onClick={() => handleSwapSelect(emptySlot)}>
+            <div style={{ width: 62, height: 62, borderRadius: '50%', border: '2px dashed var(--gold)', background: 'rgba(240,200,74,0.08)', cursor: 'pointer', transition: 'all 0.15s' }} />
+            <div style={{ fontSize: 10, color: 'var(--text-dim)', letterSpacing: '0.06em' }}>空 位</div>
+          </div>
+        )
+      }
+      return (
+        <div key={viewPos} style={POS_STYLE[viewPos]}>
+          <div style={{ width: 62, height: 62, borderRadius: '50%', border: '2px dashed rgba(74,55,40,0.18)', background: 'transparent' }} />
+        </div>
+      )
+    }
+    return (
+      <div key={viewPos} style={POS_STYLE[viewPos]} onClick={() => handleAvatarClick(player)}>
+        <TableAvatar player={player} size={62} />
+        <NameTag>{player.name}</NameTag>
+      </div>
+    )
+  }
+
+  function renderBench(dbSeat) {
+    const player = benchPlayers.find(p => p.seat === dbSeat)
+    const isMe   = player?.id === myPlayer?.id
+    const sel    = swapSelected(player?.id)
+    return (
+      <div key={dbSeat} style={POS_STYLE[dbSeat]}>
+        <div style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: '0.1em', background: 'rgba(74,55,40,0.08)', borderRadius: 6, padding: '2px 6px', marginBottom: 1 }}>备战席</div>
+        {player ? (
+          <>
+            <div
+              onClick={() => isMe
+                ? (swapMode && isHost && handleSwapSelect(player))
+                : handleAvatarClick(player)
+              }
+              style={{
+                width: 46, height: 46, borderRadius: '50%',
+                border: sel ? '3px solid var(--gold)' : isMe ? '2.5px solid var(--gold)' : '2px dashed var(--matcha-d)',
+                outline: swapMode ? `2px dashed rgba(240,200,74,${sel ? 0.7 : 0.4})` : 'none',
+                outlineOffset: 3,
+                background: isMe ? 'var(--mochi)' : 'rgba(134,179,122,0.15)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
+                position: 'relative', cursor: (isMe && !swapMode) ? 'default' : 'pointer',
+                transition: 'all 0.15s',
+              }}
+            >
+              {isHostPlayer(player) && (
+                <span style={{ position: 'absolute', top: -16, left: '50%', transform: 'translateX(-50%)', fontSize: 12 }}>👑</span>
+              )}
+              {player.emoji}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>
+              {isMe ? player.name + '（我）' : player.name}
+            </div>
+            {isMe && (
+              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--brown)', fontFamily: "'Fredoka',sans-serif" }}>
+                {player.score}
+              </div>
+            )}
+          </>
+        ) : (
+          <div style={{ width: 46, height: 46, borderRadius: '50%', border: '2px dashed rgba(74,55,40,0.15)', background: 'transparent' }} />
+        )}
+      </div>
+    )
+  }
+
+  const bottomSel  = swapSelected(bottomP?.id)
+  const bottomIsHost = isHostPlayer(bottomP)
+
   return (
     <div className="app-shell">
       {/* 顶部导航 */}
-      <div style={{ height: 56, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 20px 0', background: 'rgba(245,240,232,0.95)', borderBottom: '1.5px solid rgba(74,55,40,0.1)', backdropFilter: 'blur(6px)', zIndex: 10 }}>
+      <div style={{ height: 56, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 20px 0', background: 'rgba(245,240,232,0.95)', borderBottom: '1.5px solid rgba(74,55,40,0.1)', backdropFilter: 'blur(6px)', zIndex: 10, gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
           <span style={{ fontSize: 12, color: 'var(--text-dim)', letterSpacing: '0.1em' }}>房间</span>
-          <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--matcha-d)', fontFamily: "'Fredoka',sans-serif", letterSpacing: '0.1em', flexShrink: 0, whiteSpace: 'nowrap' }}>{room?.code}</span>
+          <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--matcha-d)', fontFamily: "'Fredoka',sans-serif", letterSpacing: '0.1em', flexShrink: 0 }}>{room?.code}</span>
         </div>
-        <span style={{ fontSize: 12, color: 'var(--text-dim)', letterSpacing: '0.08em' }}>{onlineCount}人在线</span>
+        <span style={{ fontSize: 12, color: 'var(--text-dim)', letterSpacing: '0.08em', flexShrink: 0 }}>{onlineCount}人在线</span>
+        {isHost && (
+          <button
+            onClick={toggleSwapMode}
+            style={{ flexShrink: 0, padding: '6px 14px', borderRadius: 20, fontSize: 13, letterSpacing: '0.06em', border: '1.5px solid var(--brown)', background: swapMode ? 'var(--brown)' : 'var(--gold)', color: swapMode ? 'var(--gold)' : 'var(--brown)', cursor: 'pointer' }}
+          >
+            {swapMode ? '取消换座' : '换 座'}
+          </button>
+        )}
       </div>
+
+      {/* 换座模式提示条 */}
+      {swapMode && (
+        <div style={{ background: 'rgba(240,200,74,0.92)', padding: '9px 20px', fontSize: 13, color: 'var(--brown)', textAlign: 'center', letterSpacing: '0.05em', flexShrink: 0, zIndex: 9 }}>
+          {swapFirst
+            ? `已选中「${players.find(p => p.id === swapFirst)?.name}」，再点另一位确认换座`
+            : '点击任意玩家选择换座'}
+        </div>
+      )}
 
       {/* 麻将桌区域 */}
       <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -261,16 +283,18 @@ export default function TablePage() {
           <div style={{ position: 'absolute', inset: 14, borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)' }} />
         </div>
 
-        {/* 上方玩家 */}
-        {renderOtherAvatar('top', topPlayer)}
-        {/* 左方玩家 */}
-        {renderOtherAvatar('left', leftPlayer)}
-        {/* 右方玩家 */}
-        {renderOtherAvatar('right', rightPlayer)}
+        {/* 备战席 */}
+        {renderBench('bench-left')}
+        {renderBench('bench-right')}
+
+        {/* 上 / 左 / 右 */}
+        {renderTablePos('top',   topP)}
+        {renderTablePos('left',  leftP)}
+        {renderTablePos('right', rightP)}
 
         {/* 公池 */}
         <div onClick={() => setSheet('pool')} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-52%)', zIndex: 6, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}>
-          <img src="/ip-reclining.jpg" alt="公池" style={{ width: 148, height: 88, objectFit: 'contain', objectPosition: 'bottom center', display: 'block', position: 'relative', zIndex: 2, marginBottom: -12, filter: 'drop-shadow(0 4px 6px rgba(74,55,40,0.2))' }} />
+          <img src="/ip-reclining.jpg" alt="公池" style={{ width: 128, height: 76, objectFit: 'contain', objectPosition: 'bottom center', display: 'block', position: 'relative', zIndex: 2, marginBottom: -12, filter: 'drop-shadow(0 4px 6px rgba(74,55,40,0.2))' }} />
           <div style={{ background: 'linear-gradient(160deg, var(--gold) 0%, var(--gold-d) 100%)', border: '2px solid var(--brown)', borderRadius: 20, padding: '7px 20px', display: 'flex', alignItems: 'baseline', gap: 4, boxShadow: '0 4px 12px rgba(74,55,40,0.2), 0 2px 0 rgba(74,55,40,0.3)', position: 'relative', zIndex: 1 }}>
             <span style={{ fontSize: 13, color: 'var(--brown)', letterSpacing: '0.06em' }}>公池</span>
             <span style={{ fontSize: 24, fontWeight: 700, color: 'var(--brown)', fontFamily: "'Fredoka',sans-serif" }}>{pool.score}</span>
@@ -278,21 +302,55 @@ export default function TablePage() {
           </div>
         </div>
 
-        {/* 自己（下方） */}
-        <div style={POS_STYLE.bottom}>
-          <div style={{ width: 64, height: 64, borderRadius: '50%', border: '2.5px solid var(--gold)', background: 'var(--mochi)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30, boxShadow: '0 0 0 3px rgba(240,200,74,0.3), 0 4px 12px rgba(74,55,40,0.2)', position: 'relative' }}>
-            <span style={{ position: 'absolute', top: -18, left: '50%', transform: 'translateX(-50%)', fontSize: 16 }}>
-              {isHost ? '👑' : ''}
-            </span>
-            {myPlayer?.emoji}
+        {/* 下方：自己 或 备战席跟随的桌上玩家 */}
+        <div
+          style={{ ...POS_STYLE.bottom, bottom: isBench ? 66 : 2 }}
+          onClick={() => {
+            if (swapMode && isHost) handleSwapSelect(bottomP)
+            else if (isBench) openTransfer(bottomP)
+          }}
+        >
+          <div style={{
+            width: 64, height: 64, borderRadius: '50%',
+            border: bottomSel ? '3px solid var(--gold)' : isBench ? '2px solid var(--brown)' : '2.5px solid var(--gold)',
+            outline: swapMode ? `2px dashed rgba(240,200,74,${bottomSel ? 0.7 : 0.45})` : 'none',
+            outlineOffset: 3,
+            background: 'var(--mochi)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30,
+            boxShadow: bottomSel
+              ? '0 0 0 4px rgba(240,200,74,0.3), 0 4px 12px rgba(74,55,40,0.2)'
+              : '0 0 0 3px rgba(240,200,74,0.3), 0 4px 12px rgba(74,55,40,0.2)',
+            position: 'relative',
+            cursor: (swapMode && isHost) || isBench ? 'pointer' : 'default',
+          }}>
+            {bottomIsHost && (
+              <span style={{ position: 'absolute', top: -20, left: '50%', transform: 'translateX(-50%)', fontSize: 16 }}>👑</span>
+            )}
+            {bottomP?.emoji}
           </div>
-          <div style={{ background: '#fff', border: '1.5px solid var(--brown)', borderRadius: 20, padding: '3px 10px', fontSize: 11, color: 'var(--brown)', whiteSpace: 'nowrap', boxShadow: '0 2px 6px var(--shadow)' }}>
-            {myPlayer?.name}（我）
-          </div>
-          <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--brown)', fontFamily: "'Fredoka',sans-serif" }}>
-            {myPlayer?.score ?? 0}
-          </div>
+          <NameTag>{isBench ? bottomP?.name : `${myPlayer?.name}（我）`}</NameTag>
+          {!isBench && (
+            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--brown)', fontFamily: "'Fredoka',sans-serif" }}>
+              {myPlayer?.score ?? 0}
+            </div>
+          )}
         </div>
+
+        {/* 备战席跟随选择条（仅备战席玩家可见） */}
+        {isBench && (
+          <div style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 12, background: 'rgba(74,55,40,0.78)', borderRadius: 16, padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.06em' }}>观看：</span>
+            {tablePlayers.map(p => (
+              <div
+                key={p.id}
+                onClick={() => setBenchFollowSeat(p.seat)}
+                style={{ width: 34, height: 34, borderRadius: '50%', border: p.seat === benchFollowSeat ? '2px solid var(--gold)' : '2px solid rgba(255,255,255,0.3)', background: p.seat === benchFollowSeat ? 'rgba(240,200,74,0.2)' : 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, cursor: 'pointer', transition: 'all 0.15s' }}
+              >
+                {p.emoji}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 底部导航 */}
@@ -315,22 +373,23 @@ export default function TablePage() {
       <HistorySheet  open={sheet === 'history'}  onClose={() => setSheet(null)} toast={toast} />
       {isHost && <SettingsSheet open={sheet === 'settings'} onClose={() => setSheet(null)} toast={toast} onDissolved={() => nav('/')} />}
 
-      {/* ── 换座确认 ── */}
+      {/* 换座确认弹窗 */}
       {swapReq && (
         <div className="dialog-overlay" style={{ zIndex: 200 }}>
           <div className="dialog-card">
             <h3>换 座 确 认</h3>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, margin: '16px 0 20px' }}>
-              {[swapReq.from, swapReq.to].map((v, i) => {
-                const p = v === 'bottom' ? myPlayer : playerAt(v)
-                return (
-                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                    <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--matcha-l)', border: '2px solid var(--brown)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>{p?.emoji}</div>
-                    <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>{p?.name}</span>
-                    {i === 0 && <span style={{ fontSize: 16, color: 'var(--text-dim)' }}>⇄</span>}
+            <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--text-dim)', margin: '8px 0 16px' }}>
+              {`确认将「${swapReq.pFrom?.name}」换到「${swapReq.pTo?.isEmpty ? '空位' : swapReq.pTo?.name}」的座位吗？`}
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, marginBottom: 24 }}>
+              {[swapReq.pFrom, swapReq.pTo].map((p, i) => (
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 52, height: 52, borderRadius: '50%', background: p?.isEmpty ? 'transparent' : 'var(--matcha-l)', border: p?.isEmpty ? '2px dashed var(--gold)' : '2px solid var(--brown)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
+                    {p?.isEmpty ? '' : p?.emoji}
                   </div>
-                )
-              })}
+                  <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>{p?.isEmpty ? '空位' : p?.name}</span>
+                </div>
+              ))}
             </div>
             <div className="dialog-btns">
               <button className="dialog-cancel" onClick={() => setSwapReq(null)}>取消</button>

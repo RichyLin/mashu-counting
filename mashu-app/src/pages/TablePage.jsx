@@ -157,13 +157,20 @@ export default function TablePage() {
     }
     const pFrom = playerAtView(from)
     const pTo   = playerAtView(to)
-    if (!pFrom || !pTo) { setSwapReq(null); return }
+    if (!pFrom) { setSwapReq(null); return }
 
-    // 交换 DB 座位（互相更新 seat 字段）
-    await Promise.all([
-      supabase.from('players').update({ seat: pTo.seat }).eq('id', pFrom.id),
-      supabase.from('players').update({ seat: pFrom.seat }).eq('id', pTo.id),
-    ])
+    if (pTo) {
+      // 两个座位都有人 → 互换 DB seat
+      await Promise.all([
+        supabase.from('players').update({ seat: pTo.seat }).eq('id', pFrom.id),
+        supabase.from('players').update({ seat: pFrom.seat }).eq('id', pTo.id),
+      ])
+    } else {
+      // 目标座位为空 → 只移动 pFrom 到目标 DB seat
+      const CW = ['bottom', 'right', 'top', 'left']
+      const targetDbSeat = CW[(CW.indexOf(to) + CW.indexOf(mySeat)) % 4]
+      await supabase.from('players').update({ seat: targetDbSeat }).eq('id', pFrom.id)
+    }
     setSwapReq(null)
     toast('换座成功')
   }
@@ -199,7 +206,8 @@ export default function TablePage() {
           data-seat={viewPos}
           onClick={() => openTransfer(player)}
           {...bindAvatar(viewPos, player)}
-          style={{ width: 56, height: 56, borderRadius: '50%', border: `2px solid ${isOver ? 'var(--gold)' : 'var(--brown)'}`, background: 'var(--mochi)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, boxShadow: isOver ? '0 0 0 3px rgba(240,200,74,0.4), 0 4px 10px rgba(74,55,40,0.2)' : '0 4px 10px rgba(74,55,40,0.2)', cursor: 'pointer', userSelect: 'none', transition: 'transform 0.15s', touchAction: 'none' }}
+          onContextMenu={e => e.preventDefault()}
+          style={{ width: 56, height: 56, borderRadius: '50%', border: `2px solid ${isOver ? 'var(--gold)' : 'var(--brown)'}`, background: 'var(--mochi)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, boxShadow: isOver ? '0 0 0 3px rgba(240,200,74,0.4), 0 4px 10px rgba(74,55,40,0.2)' : '0 4px 10px rgba(74,55,40,0.2)', cursor: 'pointer', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none', transition: 'transform 0.15s', touchAction: 'none' }}
         >
           {player.emoji}
         </div>
@@ -216,7 +224,7 @@ export default function TablePage() {
       <div style={{ height: 56, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 20px 0', background: 'rgba(245,240,232,0.95)', borderBottom: '1.5px solid rgba(74,55,40,0.1)', backdropFilter: 'blur(6px)', zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
           <span style={{ fontSize: 12, color: 'var(--text-dim)', letterSpacing: '0.1em' }}>房间</span>
-          <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--matcha-d)', fontFamily: "'Fredoka',sans-serif", letterSpacing: '0.18em' }}>{room?.code}</span>
+          <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--matcha-d)', fontFamily: "'Fredoka',sans-serif", letterSpacing: '0.1em', flexShrink: 0, whiteSpace: 'nowrap' }}>{room?.code}</span>
         </div>
         <span style={{ fontSize: 12, color: 'var(--text-dim)', letterSpacing: '0.08em' }}>{onlineCount}人在线</span>
       </div>

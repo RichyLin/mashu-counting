@@ -2,6 +2,27 @@ import { useRoom } from '../../context/RoomContext'
 import * as db from '../../lib/db'
 import { useConfirm, ConfirmDialog } from '../ConfirmDialog'
 
+function isVisible(tx, myId) {
+  if (tx.type === 'transfer') {
+    return tx.from_player_id === myId || tx.to_player_id === myId
+  }
+  if (tx.type === 'revoke') {
+    // 无 to_player 说明是公池操作撤回，所有人可见；否则是转账撤回，只对双方可见
+    if (!tx.to_player_id) return true
+    return tx.from_player_id === myId || tx.to_player_id === myId
+  }
+  return true // pool_pay / pool_collect 所有人可见
+}
+
+function canRevoke(tx, myId) {
+  if (tx.revoked || tx.type === 'revoke') return false
+  if (tx.type === 'transfer') {
+    return tx.from_player_id === myId || tx.to_player_id === myId
+  }
+  // pool_pay / pool_collect：只有操作者本人可撤回
+  return tx.from_player_id === myId
+}
+
 function getMyDelta(tx, myId) {
   if (tx.revoked) return null
   const isFrom = tx.from_player_id === myId
@@ -36,10 +57,11 @@ export default function HistorySheet({ open, onClose, toast }) {
           <div className="sheet-ttl">交易记录</div>
 
           <div style={{ flex: 1, overflowY: 'auto' }}>
-            {transactions.length === 0
+            {transactions.filter(tx => isVisible(tx, myPlayer?.id)).length === 0
               ? <div style={{ textAlign: 'center', color: 'var(--text-light)', fontSize: 14, padding: '40px 0' }}>暂无记录</div>
-              : transactions.map(tx => {
-                  const delta = getMyDelta(tx, myPlayer?.id)
+              : transactions.filter(tx => isVisible(tx, myPlayer?.id)).map(tx => {
+                  const myId = myPlayer?.id
+                  const delta = getMyDelta(tx, myId)
                   const isRevoke = tx.type === 'revoke'
                   const isRevoked = tx.revoked
                   const dimmed = isRevoke || isRevoked
@@ -58,7 +80,7 @@ export default function HistorySheet({ open, onClose, toast }) {
                           {delta > 0 ? '+' : ''}{delta}
                         </span>
                       )}
-                      {!isRevoke && !isRevoked
+                      {canRevoke(tx, myId)
                         ? <button onClick={() => handleRevoke(tx)} style={{ background: '#fff', border: '1.5px solid rgba(74,55,40,0.2)', borderRadius: 8, padding: '4px 10px', color: 'rgba(74,55,40,0.45)', fontSize: 12, whiteSpace: 'nowrap' }}>撤回</button>
                         : <span style={{ fontSize: 11, color: 'var(--gray-dis)', whiteSpace: 'nowrap', marginLeft: 8 }}>{isRevoked ? '已撤回' : ''}</span>
                       }

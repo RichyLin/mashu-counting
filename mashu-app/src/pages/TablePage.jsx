@@ -247,9 +247,9 @@ export default function TablePage() {
     <div className="app-shell">
       {/* 顶部导航 */}
       <div style={{ height: 56, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 20px 0', background: 'rgba(245,240,232,0.95)', borderBottom: '1.5px solid rgba(74,55,40,0.1)', backdropFilter: 'blur(6px)', zIndex: 10, gap: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-          <span style={{ fontSize: 12, color: 'var(--text-dim)', letterSpacing: '0.1em' }}>房间</span>
-          <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--matcha-d)', fontFamily: "'Fredoka',sans-serif", letterSpacing: '0.1em', flexShrink: 0 }}>{room?.code}</span>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, flexShrink: 0 }}>
+          <span style={{ fontSize: 12, color: 'var(--text-dim)', letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>房间</span>
+          <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--matcha-d)', fontFamily: "'Fredoka',sans-serif", letterSpacing: '0.1em', whiteSpace: 'nowrap' }}>{room?.code}</span>
         </div>
         <span style={{ fontSize: 12, color: 'var(--text-dim)', letterSpacing: '0.08em', flexShrink: 0 }}>{onlineCount}人在线</span>
         {isHost && (

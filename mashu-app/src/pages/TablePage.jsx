@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useRoom, getViewPos } from '../context/RoomContext'
 import { clearStoredPlayer } from '../lib/deviceId'
 import { useToast, Toast } from '../components/Toast'
+import { useConfirm, ConfirmDialog } from '../components/ConfirmDialog'
 import TransferSheet from '../components/sheets/TransferSheet'
 import PoolSheet from '../components/sheets/PoolSheet'
 import HistorySheet from '../components/sheets/HistorySheet'
@@ -31,7 +32,7 @@ export default function TablePage() {
   const [benchFollowSeat, setBenchFollowSeat] = useState('bottom')
   const [swapMode, setSwapMode] = useState(false)
   const [swapFirst, setSwapFirst] = useState(null)   // player id
-  const [swapReq, setSwapReq]   = useState(null)     // { pFrom, pTo }
+  const { confirmCfg: swapCfg, confirm: swapConfirm, closeConfirm: closeSwap } = useConfirm()
 
   const isHost  = room?.host_device_id === myPlayer?.device_id
   const isBench = BENCH_SEATS.includes(myPlayer?.seat)
@@ -91,26 +92,26 @@ export default function TablePage() {
       setSwapFirst(null)
     } else {
       const pFrom = players.find(p => p.id === swapFirst)
+      const pTo = player
       setSwapFirst(null)
-      setSwapReq({ pFrom, pTo: player })
+      swapConfirm(
+        '换 座 确 认',
+        `确认将「${pFrom?.name}」换到「${pTo.isEmpty ? '空位' : pTo?.name}」的座位吗？`,
+        async () => {
+          const result = pTo.isEmpty
+            ? await db.moveSeat(pFrom.id, pTo.seat)
+            : await db.swapSeats(pFrom.id, pTo.id)
+          if (result?.error) { toast('换座失败：' + result.error.message); return }
+          setSwapMode(false)
+          toast('换座成功')
+        }
+      )
     }
   }
 
   function handleAvatarClick(player) {
     if (swapMode && isHost) handleSwapSelect(player)
     else openTransfer(player)
-  }
-
-  async function confirmSwap() {
-    if (!swapReq) return
-    const { pFrom, pTo } = swapReq
-    const result = pTo.isEmpty
-      ? await db.moveSeat(pFrom.id, pTo.seat)
-      : await db.swapSeats(pFrom.id, pTo.id)
-    if (result.error) { toast('换座失败：' + result.error.message); return }
-    setSwapReq(null)
-    setSwapMode(false)
-    toast('换座成功')
   }
 
   // ── Loading / error ───────────────────────────────────────
@@ -366,29 +367,9 @@ export default function TablePage() {
       <HistorySheet  open={sheet === 'history'}  onClose={() => setSheet(null)} toast={toast} />
       <SettingsSheet open={sheet === 'settings'} onClose={() => setSheet(null)} toast={toast} onDissolved={() => nav('/')} />
 
-      {/* 换座确认弹窗 */}
-      {swapReq && (
-        <div className="dialog-overlay" style={{ zIndex: 200 }}>
-          <div className="dialog-card">
-            <h3>换 座 确 认</h3>
-            <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--text-dim)', margin: '8px 0 16px' }}>
-              {`确认将「${swapReq.pFrom?.name}」换到「${swapReq.pTo?.isEmpty ? '空位' : swapReq.pTo?.name}」的座位吗？`}
-            </p>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, marginBottom: 24 }}>
-              {[swapReq.pFrom, swapReq.pTo].map((p, i) => (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                  <div style={{ width: 52, height: 52, borderRadius: '50%', background: p?.isEmpty ? 'transparent' : 'var(--matcha-l)', border: p?.isEmpty ? '2px dashed var(--gold)' : '2px solid var(--brown)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}>
-                    {p?.isEmpty ? '' : p?.emoji}
-                  </div>
-                  <span style={{ fontSize: 12, color: 'var(--text-dim)' }}>{p?.isEmpty ? '空位' : p?.name}</span>
-                </div>
-              ))}
-            </div>
-            <div className="dialog-btns">
-              <button className="dialog-cancel" onClick={() => setSwapReq(null)}>取消</button>
-              <button type="button" style={{ flex: 1, padding: 14, background: 'linear-gradient(160deg, var(--matcha) 0%, var(--matcha-d) 100%)', border: '2px solid var(--brown)', borderRadius: 14, fontSize: 15, color: '#fff', cursor: 'pointer', fontFamily: 'inherit' }} onClick={confirmSwap}>确认换座</button>
-            </div>
-          </div>
+      {swapCfg && (
+        <div style={{ zIndex: 300, position: 'absolute', inset: 0 }}>
+          <ConfirmDialog cfg={swapCfg} onClose={closeSwap} />
         </div>
       )}
 
